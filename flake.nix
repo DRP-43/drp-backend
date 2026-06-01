@@ -18,7 +18,10 @@
                 devShells.default = pkgs.mkShell {
                     packages = with pkgs; [
                         diesel-cli
-                        libpq # Necessary when building as it links against it
+
+                        # Build dependencies
+                        libpq
+                        openssl
                     ];
                 };
             }

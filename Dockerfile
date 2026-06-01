@@ -2,7 +2,7 @@
 FROM rust:1.96-alpine AS builder
 
 # Install build dependencies for static linking
-RUN apk add --no-cache musl-dev openssl-dev libpq-dev
+RUN apk add --no-cache musl-dev pkgconfig openssl-dev postgresql-dev
 
 WORKDIR /app
 
@@ -15,7 +15,6 @@ COPY Cargo.toml Cargo.lock ./
 RUN mkdir -p src/bin/app;
 RUN echo "fn main() {}" > src/bin/app/main.rs;
 RUN echo "pub fn dummy() {}" > src/lib.rs;
-# NOTE: necessary so that rust can include these libraries in build.
 RUN cargo build --release;
 RUN rm -rf src;
 
