@@ -15,7 +15,12 @@
                 pkgs = import nixpkgs { inherit system; };
             in
             {
-                devShells.default = pkgs.mkShell { packages = with pkgs; [ diesel-cli ]; };
+                devShells.default = pkgs.mkShell {
+                    packages = with pkgs; [
+                        diesel-cli
+                        libpq # Necessary when building as it links against it
+                    ];
+                };
             }
         );
 }

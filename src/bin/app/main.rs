@@ -1,4 +1,5 @@
 mod routes;
+mod state;
 
 use std::net::SocketAddr;
 use tracing::{Level, info};
@@ -23,7 +24,10 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Server running on {address}...");
 
-    axum::serve(listener, routes::routes()).await?;
+    let db_conn = drp_backend::db::establish_connection();
+    let app_state = state::AppState::new(db_conn);
+
+    axum::serve(listener, routes::routes(app_state)).await?;
 
     Ok(())
 }
