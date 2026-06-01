@@ -6,23 +6,28 @@ RUN apk add --no-cache musl-dev
 
 WORKDIR /app
 
-# Copy manifests first for layer caching
-COPY Cargo.toml Cargo.lock ./
-
 # Create dummy source for dependency caching.
 #
 # We replace `src/bin/app/main.rs` and `src/lib.rs` with dummy files that do nothing, so that we can
 # compile all the dependencies first in a layer. This means that the next layer *only* compiles the
 # build, so we can fast-forward this layer as it will (usually) remain the same.
-RUN mkdir -p src/bin/app && \
-    echo "fn main() {}" > src/bin/app/main.rs && \
-    echo "pub fn dummy() {}" > src/lib.rs && \
-    cargo build --release && \
-    rm -rf src
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir -p src/bin/app;
+RUN echo "fn main() {}" > src/bin/app/main.rs;
+RUN echo "pub fn dummy() {}" > src/lib.rs;
+RUN cargo build --release;
+RUN rm -rf src;
 
 # Copy source and rebuild
-COPY . ./
-RUN cargo build --release
+#
+# NOTE: For some reason the `touch` commands are required for this to build properly. Otherwise the
+# container just exits right after running.
+#
+# TODO: Figure out why the `touch` commands are required!
+COPY src ./src
+RUN touch src/bin/app/main.rs;
+RUN touch src/lib.rs;
+RUN cargo build --release;
 
 # Stage 2: Runtime - completely empty base
 FROM scratch
