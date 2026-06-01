@@ -2,7 +2,7 @@
 FROM rust:1.96-alpine AS builder
 
 # Install build dependencies for static linking
-RUN apk add --no-cache musl-dev
+RUN apk add --no-cache musl-dev postgresql-dev
 
 WORKDIR /app
 
@@ -29,13 +29,13 @@ RUN touch src/bin/app/main.rs;
 RUN touch src/lib.rs;
 RUN cargo build --release;
 
-# Stage 2: Runtime - completely empty base
-FROM scratch
+# Stage 2: Runtime - minimal Alpine base
+FROM alpine
 
-# Copy CA certificates for HTTPS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Install runtime dependencies
+RUN apk add --no-cache libpq ca-certificates
 
-# Copy the static binary
+# Copy the binary
 COPY --from=builder /app/target/release/app /app
 
 # Expose port env-var & image port
