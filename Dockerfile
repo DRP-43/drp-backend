@@ -21,10 +21,10 @@ RUN rm -rf src;
 
 # Copy source and rebuild
 #
-# NOTE: For some reason the `touch` commands are required for this to build properly. Otherwise the
-# container just exits right after running.
-#
-# TODO: Figure out why the `touch` commands are required!
+# NOTE: The `touch` commands are necessary as they update the modification timestamp on the files,
+# which cargo uses to see what needs to be rebuilt. If these files aren't `touch`-ed and have their
+# modification timestamp updated, then cargo will assume no change and release the dummy binary
+# built in the previous step
 COPY src ./src
 RUN touch src/bin/app/main.rs;
 RUN touch src/lib.rs;
