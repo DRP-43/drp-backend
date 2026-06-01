@@ -15,7 +15,8 @@ COPY Cargo.toml Cargo.lock ./
 RUN mkdir -p src/bin/app;
 RUN echo "fn main() {}" > src/bin/app/main.rs;
 RUN echo "pub fn dummy() {}" > src/lib.rs;
-RUN cargo build --release;
+# NOTE: necessary so that rust can include these libraries in build.
+RUN RUSTFLAGS="-lpgcommon -lpgport -lssl -lcrypto" cargo build --release;
 RUN rm -rf src;
 
 # Copy source and rebuild
