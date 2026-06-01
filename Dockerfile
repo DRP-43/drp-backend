@@ -2,7 +2,7 @@
 FROM rust:1.96-alpine AS builder
 
 # Install build dependencies for static linking
-RUN apk add --no-cache musl-dev postgresql-dev openssl-dev libpq
+RUN apk add --no-cache musl-dev openssl-libs-static libpq-dev
 
 WORKDIR /app
 
