@@ -1,8 +1,9 @@
 # Stage 1: Build
-FROM rust:1.96-alpine AS builder
+FROM rust:1.96-slim AS builder
 
 # Install build dependencies for static linking
-RUN apk add --no-cache musl-dev pkgconfig openssl-dev postgresql-dev
+RUN apt-get update && apt-get install -y pkg-config libssl-dev libpq-dev;
+RUN rm -rf /var/lib/apt/lists/*;
 
 WORKDIR /app
 
@@ -30,10 +31,12 @@ RUN touch src/lib.rs;
 RUN cargo build --release;
 
 # Stage 2: Runtime - minimal Alpine base
-FROM alpine
+FROM debian:trixie-slim
 
 # Install runtime dependencies
-RUN apk add --no-cache libpq ca-certificates
+RUN apt-get update;
+RUN apt-get install -y libpq5 ca-certificates;
+RUN rm -rf /var/lib/apt/lists/*;
 
 # Copy the binary
 COPY --from=builder /app/target/release/app /app
