@@ -17,9 +17,6 @@ pub struct Recipe {
     /// The ID for the recipe.
     pub id: i32,
 
-    /// The user which owns the recipe.
-    pub user_id: i32,
-
     /// The name of the recipe.
     pub name: String,
 
