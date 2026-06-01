@@ -1,11 +1,14 @@
 mod routes;
 
 use std::net::SocketAddr;
+use tracing::{Level, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(Level::TRACE)
+        .init();
 
     // Get the port number from the environment, default to 3000
     let port: u16 = std::env::var("PORT")
@@ -18,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
-    println!("Server running on {address}...");
+    info!("Server running on {address}...");
 
     axum::serve(listener, routes::routes()).await?;
 
