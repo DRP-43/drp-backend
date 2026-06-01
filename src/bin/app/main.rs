@@ -1,4 +1,5 @@
-use axum::{Router, http::StatusCode, routing::get};
+mod routes;
+
 use std::net::SocketAddr;
 
 #[tokio::main]
@@ -17,25 +18,9 @@ async fn main() -> anyhow::Result<()> {
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
-    // Build our application with a route
-    let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        // `POST /users` goes to `health`
-        .route("/health", get(health));
-
     println!("Server running on {address}...");
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, routes::routes()).await?;
 
     Ok(())
-}
-
-// basic handler that responds with a static string
-async fn root() -> &'static str {
-    "Hello, World!"
-}
-
-async fn health() -> (StatusCode, &'static str) {
-    (StatusCode::OK, "service is online!")
 }

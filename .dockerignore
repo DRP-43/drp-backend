@@ -4,3 +4,9 @@ target
 *.md
 .vscode
 .env
+.envrc
+.direnv
+.rustfmt.toml
+flake.lock
+flake.nix
+LICENSE
