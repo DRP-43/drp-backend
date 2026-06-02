@@ -1,7 +1,7 @@
 use diesel::prelude::*;
+use uuid::*;
 
-pub type UserId = i32;
-pub type RecipeId = i32;
+pub type UserId = Uuid;
 
 /// A user
 #[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]
@@ -10,7 +10,12 @@ pub type RecipeId = i32;
 pub struct User {
     /// The ID for the user.
     pub id: UserId,
+
+    /// Whether or not this is a development/testing user (FOR DEVELEOPMENT ONLY)
+    pub __is_dev: bool,
 }
+
+pub type RecipeId = Uuid;
 
 /// A recipe that a user has favorited
 #[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]

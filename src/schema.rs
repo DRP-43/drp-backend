@@ -2,7 +2,7 @@
 
 diesel::table! {
     recipes (id) {
-        id -> Int4,
+        id -> Uuid,
         name -> Varchar,
         ingredients -> Array<Text>,
     }
@@ -10,21 +10,22 @@ diesel::table! {
 
 diesel::table! {
     users (id) {
-        id -> Int4,
+        id -> Uuid,
+        __is_dev -> Bool,
     }
 }
 
 diesel::table! {
     users_favorite_recipes (user_id, recipe_id) {
-        user_id -> Int4,
-        recipe_id -> Int4,
+        user_id -> Uuid,
+        recipe_id -> Uuid,
     }
 }
 
 diesel::table! {
     users_queued_recipes (user_id, recipe_id) {
-        user_id -> Int4,
-        recipe_id -> Int4,
+        user_id -> Uuid,
+        recipe_id -> Uuid,
         queue_number -> Int4,
     }
 }
