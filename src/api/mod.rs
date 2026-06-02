@@ -4,7 +4,7 @@ mod v1;
 use axum::{Router, http::StatusCode, routing::get};
 use diesel::PgConnection;
 use std::{
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
     time::Duration,
 };
 use tower::ServiceBuilder;
@@ -25,11 +25,22 @@ impl AppState {
             db_conn: Arc::new(Mutex::new(db_conn)),
         }
     }
+
+    /// Runs a function that uses a mutable reference to the database connection.
+    pub fn query_db<'a, T>(&'a self, f: impl FnOnce(&mut MutexGuard<'a, PgConnection>) -> T) -> T where
+    {
+        let db_conn = &mut self
+            .db_conn
+            .lock()
+            .expect("This mutex shouldn't be poisoned!");
+
+        f(db_conn)
+    }
 }
 
 /// Get the top-level root router for the app.
-pub fn router(app_state: AppState) -> Router {
-    let (v1, docs) = v1::router(docs::ApiDoc::openapi());
+pub fn router(state: AppState) -> Router {
+    let (v1, docs) = v1::router(docs::ApiDoc::openapi(), state.clone());
 
     Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", docs))
@@ -44,5 +55,5 @@ pub fn router(app_state: AppState) -> Router {
                     Duration::from_secs(120),
                 )),
         )
-        .with_state(app_state)
+        .with_state(state)
 }

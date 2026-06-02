@@ -1,14 +1,17 @@
+use ::serde::Serialize;
 use diesel::prelude::*;
+use utoipa::ToSchema;
 use uuid::*;
 
 pub type UserId = Uuid;
 
 /// A user
-#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]
+#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize)]
 #[diesel(table_name = crate::db::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     /// The ID for the user.
+    #[schema(value_type = String, format = Uuid)]
     pub id: UserId,
 
     /// Whether or not this is a development/testing user (FOR DEVELEOPMENT ONLY)
@@ -18,11 +21,12 @@ pub struct User {
 pub type RecipeId = Uuid;
 
 /// A recipe that a user has favorited
-#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]
+#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize)]
 #[diesel(table_name = crate::db::schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
     /// The ID for the recipe.
+    #[schema(value_type = String, format = Uuid)]
     pub id: RecipeId,
 
     /// The name of the recipe.
