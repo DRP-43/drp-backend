@@ -4,7 +4,7 @@ mod v1;
 use axum::{Router, http::StatusCode, routing::get};
 use diesel::PgConnection;
 use std::{
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{Arc, Mutex},
     time::Duration,
 };
 use tower::ServiceBuilder;
@@ -27,8 +27,7 @@ impl AppState {
     }
 
     /// Runs a function that uses a mutable reference to the database connection.
-    pub fn query_db<'a, T>(&'a self, f: impl FnOnce(&mut MutexGuard<'a, PgConnection>) -> T) -> T where
-    {
+    pub fn query_db<T>(&self, f: impl FnOnce(&mut PgConnection) -> T) -> T where {
         let db_conn = &mut self
             .db_conn
             .lock()

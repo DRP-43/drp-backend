@@ -1,4 +1,4 @@
-use crate::db::models::UserId;
+use axum::{http::StatusCode, response::IntoResponse};
 
 /// The result type that we use for our errors
 pub type Result<T> = core::result::Result<T, Error>;
@@ -14,7 +14,23 @@ pub enum Error {
     #[error("Error connecting to the database: {0}")]
     DBConn(#[from] diesel::result::ConnectionError),
 
-    /// User failed to authenticate properly
-    #[error("User {id} failed to authenticate.")]
-    Auth { id: UserId },
+    /// User failed to authenticate properly, no authentication token.
+    #[error("Failed to authenticate: no authentication token")]
+    AuthNoToken,
+
+    /// User failed to authenticate properly, device ID mismatch
+    #[error("Failed to authenticate: device id {id} is not associated with a user")]
+    AuthDeviceId { id: String },
+}
+
+impl IntoResponse for Error {
+    fn into_response(self) -> axum::response::Response {
+        let err_str = format!("{self}");
+        let err_code = match self {
+            Error::DB(_) | Error::DBConn(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::AuthNoToken | Error::AuthDeviceId { .. } => StatusCode::UNAUTHORIZED,
+        };
+
+        (err_code, err_str).into_response()
+    }
 }

@@ -1,3 +1,4 @@
+use diesel::{Connection, PgConnection};
 use dotenvy::dotenv;
 use drp_backend::api;
 use std::{env, net::SocketAddr};
@@ -28,8 +29,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Get the database url
     let database_url = env::var("DATABASE_URL")?;
-    let db_conn = drp_backend::db::establish_connection(database_url)?;
-
+    let db_conn = PgConnection::establish(&database_url)?;
     let app_state = api::AppState::new(db_conn);
 
     axum::serve(listener, api::router(app_state)).await?;

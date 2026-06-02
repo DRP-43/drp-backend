@@ -1,25 +1,15 @@
-use crate::{
-    api::AppState,
-    db::{models::User, schema::users},
-    errors,
-};
+use crate::errors::*;
+use crate::{api::AppState, errors, models::User, schema::users};
 use axum::{
     extract::{Request, State},
-    http::{self, StatusCode},
+    http,
     middleware::Next,
     response::Response,
 };
 use diesel::prelude::*;
-use diesel::{PgConnection, SelectableHelper};
-use uuid::Uuid;
 
 /// Middleware to authorize users' requests.
-pub async fn auth(
-    State(state): State<AppState>,
-
-    mut req: Request,
-    next: Next,
-) -> Result<Response, StatusCode> {
+pub async fn auth(State(state): State<AppState>, mut req: Request, next: Next) -> Result<Response> {
     let auth_header = req
         .headers()
         .get(http::header::AUTHORIZATION)
@@ -28,17 +18,14 @@ pub async fn auth(
     let auth_header = if let Some(auth_header) = auth_header {
         auth_header
     } else {
-        return Err(StatusCode::UNAUTHORIZED);
+        return Err(Error::AuthNoToken);
     };
 
-    match state.query_db(|db_conn| authorize_current_user(db_conn, auth_header)) {
-        Ok(user) => {
-            req.extensions_mut().insert(user);
-            Ok(next.run(req).await)
-        }
+    let user = state.query_db(|db_conn| authorize_current_user(db_conn, auth_header))?;
 
-        Err(_) => Err(StatusCode::UNAUTHORIZED),
-    }
+    req.extensions_mut().insert(user);
+
+    Ok(next.run(req).await)
 }
 
 fn authorize_current_user(conn: &mut PgConnection, auth_token: &str) -> errors::Result<User> {
@@ -51,7 +38,7 @@ fn authorize_current_user(conn: &mut PgConnection, auth_token: &str) -> errors::
     //  4. if no match, unauthorized!
     //
     // TODO: Move into `db::` or refactor entire codebase
-    let user_id = Uuid::nil();
+    let user_id = uuid::Uuid::nil();
 
     let user = users::table
         .filter(users::id.eq(user_id))
