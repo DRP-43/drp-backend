@@ -1,7 +1,5 @@
-mod routes;
-mod state;
-
 use dotenvy::dotenv;
+use drp_backend::api;
 use std::{env, net::SocketAddr};
 use tracing::{Level, info};
 
@@ -32,9 +30,9 @@ async fn main() -> anyhow::Result<()> {
     let database_url = env::var("DATABASE_URL")?;
     let db_conn = drp_backend::db::establish_connection(database_url)?;
 
-    let app_state = state::AppState::new(db_conn);
+    let app_state = api::AppState::new(db_conn);
 
-    axum::serve(listener, routes::routes(app_state)).await?;
+    axum::serve(listener, api::router(app_state)).await?;
 
     Ok(())
 }

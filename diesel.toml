@@ -3,7 +3,7 @@
 
 [print_schema]
     custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
-    file                = "src/schema.rs"
+    file                = "src/db/schema.rs"
 
 [migrations_directory]
     dir = "migrations"
