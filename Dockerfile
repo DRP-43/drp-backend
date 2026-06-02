@@ -14,7 +14,7 @@ WORKDIR /app
 # build, so we can fast-forward this layer as it will (usually) remain the same.
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir -p src/bin/app;
-RUN echo "fn main() {}" > src/bin/app/main.rs;
+RUN echo "fn main() {}" > src/bin/app.rs;
 RUN echo "pub fn dummy() {}" > src/lib.rs;
 RUN cargo build --release;
 RUN rm -rf src;
@@ -26,7 +26,7 @@ RUN rm -rf src;
 # modification timestamp updated, then cargo will assume no change and release the dummy binary
 # built in the previous step
 COPY src ./src
-RUN touch src/bin/app/main.rs;
+RUN touch src/bin/app.rs;
 RUN touch src/lib.rs;
 RUN cargo build --release;
 
