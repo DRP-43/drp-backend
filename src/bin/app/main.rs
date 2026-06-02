@@ -1,11 +1,15 @@
 mod routes;
 mod state;
 
-use std::net::SocketAddr;
+use dotenvy::dotenv;
+use std::{env, net::SocketAddr};
 use tracing::{Level, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load `.env` file. It's ok if it doesn't exist.
+    dotenv().ok();
+
     // Initialize tracing
     tracing_subscriber::fmt()
         .with_max_level(Level::TRACE)
@@ -24,7 +28,10 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Server running on {address}...");
 
-    let db_conn = drp_backend::db::establish_connection();
+    // Get the database url
+    let database_url = env::var("DATABASE_URL")?;
+    let db_conn = drp_backend::db::establish_connection(database_url)?;
+
     let app_state = state::AppState::new(db_conn);
 
     axum::serve(listener, routes::routes(app_state)).await?;

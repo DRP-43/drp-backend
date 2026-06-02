@@ -21,7 +21,22 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    users_queued_recipes (user_id, recipe_id) {
+        user_id -> Int4,
+        recipe_id -> Int4,
+        queue_number -> Int4,
+    }
+}
+
 diesel::joinable!(users_favorite_recipes -> recipes (recipe_id));
 diesel::joinable!(users_favorite_recipes -> users (user_id));
+diesel::joinable!(users_queued_recipes -> recipes (recipe_id));
+diesel::joinable!(users_queued_recipes -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(recipes, users, users_favorite_recipes,);
+diesel::allow_tables_to_appear_in_same_query!(
+    recipes,
+    users,
+    users_favorite_recipes,
+    users_queued_recipes,
+);

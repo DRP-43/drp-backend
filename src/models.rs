@@ -1,25 +1,61 @@
 use diesel::prelude::*;
 
+pub type UserId = i32;
+pub type RecipeId = i32;
+
 /// A user
-#[derive(Debug, Queryable, Selectable)]
+#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     /// The ID for the user.
-    pub id: i32,
+    pub id: UserId,
 }
 
 /// A recipe that a user has favorited
-#[derive(Debug, Queryable, Selectable)]
+#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug)]
 #[diesel(table_name = crate::schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
     /// The ID for the recipe.
-    pub id: i32,
+    pub id: RecipeId,
 
     /// The name of the recipe.
     pub name: String,
 
     /// The ingredients in the recipe.
     pub ingredients: Vec<String>,
+}
+
+/// A recipe favorited by a user.
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[diesel(table_name = crate::schema::users_favorite_recipes)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(Recipe))]
+#[diesel(primary_key(user_id, recipe_id))]
+pub struct UserFavoritedRecipe {
+    /// The ID for the user.
+    pub user_id: UserId,
+
+    /// The ID for the recipe.
+    pub recipe_id: RecipeId,
+}
+
+/// A recipe queued by a user
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[diesel(table_name = crate::schema::users_queued_recipes)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(Recipe))]
+#[diesel(primary_key(user_id, recipe_id))]
+pub struct UserQueuedRecipe {
+    /// The ID for the user.
+    pub user_id: UserId,
+
+    /// The ID for the recipe.
+    pub recipe_id: RecipeId,
+
+    /// The queue number for the recipe.
+    pub queue_number: i32,
 }

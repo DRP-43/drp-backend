@@ -1,5 +1,3 @@
-ALTER TABLE "recipes" DROP COLUMN "user_id";
-
 CREATE TABLE "users_favorite_recipes" (
     "user_id" INT4 NOT NULL,
     "recipe_id" INT4 NOT NULL,
