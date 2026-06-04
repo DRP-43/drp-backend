@@ -4,7 +4,7 @@ diesel::table! {
     recipe_reviews (user_id, recipe_id) {
         user_id -> Uuid,
         recipe_id -> Uuid,
-        rating -> Int4,
+        rating -> Int2,
     }
 }
 
