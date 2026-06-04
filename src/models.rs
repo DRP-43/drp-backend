@@ -6,7 +6,9 @@ use uuid::*;
 pub type UserId = Uuid;
 
 /// A user
-#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize)]
+#[derive(
+    Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize, Insertable,
+)]
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
@@ -22,7 +24,9 @@ pub struct User {
 pub type RecipeId = Uuid;
 
 /// A recipe that a user has favorited
-#[derive(Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize)]
+#[derive(
+    Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize, Insertable,
+)]
 #[diesel(table_name = crate::schema::recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
@@ -38,7 +42,7 @@ pub struct Recipe {
 }
 
 /// A recipe favorited by a user.
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
 #[diesel(table_name = crate::schema::users_favorite_recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(User))]
@@ -53,7 +57,7 @@ pub struct UserFavoritedRecipe {
 }
 
 /// A recipe queued by a user
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
 #[diesel(table_name = crate::schema::users_queued_recipes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(User))]
@@ -71,7 +75,7 @@ pub struct UserQueuedRecipe {
 }
 
 /// A review for a recipe by a user
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
 #[diesel(table_name = crate::schema::recipe_reviews)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[diesel(belongs_to(User))]

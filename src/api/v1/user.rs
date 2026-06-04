@@ -8,6 +8,7 @@ use axum::middleware;
 use axum::middleware::Next;
 use axum::response::Response;
 use axum::{Extension, Json};
+use diesel::dsl::*;
 use diesel::prelude::*;
 use serde::Serialize;
 use utoipa::Modify;
@@ -46,10 +47,52 @@ impl Modify for UserAuthModifier {
 pub fn router(state: AppState) -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::with_openapi(UserApiDoc::openapi())
         .routes(routes!(get_user))
-        .routes(routes!(get_favorites))
-        .routes(routes!(get_queue))
+        .routes(routes!(get_favorites, post_favorites, delete_favorites))
+        .routes(routes!(get_queue, post_queue, delete_queue))
         .route_layer(middleware::from_fn_with_state(state, user_auth))
 }
+
+/// Middleware to authorize users' requests.
+pub async fn user_auth(
+    Path(user_id): Path<UserId>,
+    State(state): State<AppState>,
+    mut req: Request,
+    next: Next,
+) -> Result<Response> {
+    let auth_header = req
+        .headers()
+        .get(http::header::AUTHORIZATION)
+        .and_then(|header| header.to_str().ok());
+
+    let auth_header = if let Some(auth_header) = auth_header {
+        auth_header
+    } else {
+        return Err(Error::AuthNoToken);
+    };
+
+    let user = state.query_db(|conn| {
+        // TODO: Authorize like this:
+        //  1. Get device id from auth token
+        //  2. check device id hash matches db entry for a user
+        //  3. check user id matches device id user
+        //  4. if match, authorized! if no match, unauthorized!
+
+        let _ = auth_header; // NOTE: only here so we get rid of unused variable warning above
+
+        users::table
+            .filter(users::id.eq(user_id))
+            .select(User::as_select())
+            .get_result(conn)
+    })?;
+
+    req.extensions_mut().insert(user);
+
+    Ok(next.run(req).await)
+}
+
+/************************************************************************************************
+ *                                         API ROUTES                                           *
+ ************************************************************************************************/
 
 /// Get the user's information.
 #[utoipa::path(
@@ -95,6 +138,68 @@ async fn get_favorites(
     Ok(Json(favorited_recipes))
 }
 
+/// Add to the user's favorite recipes
+#[utoipa::path(
+        post,
+        path = "/{user_id}/favorites",
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Recipe was added to the user's favorites", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn post_favorites(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    recipe_id_str: String, // NOTE: This is just the body as a string
+) -> Result<Json<usize>> {
+    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
+
+    let res = state.query_db(|conn| {
+        insert_into(users_favorite_recipes::table)
+            .values(&UserFavoritedRecipe {
+                user_id: user.id,
+                recipe_id,
+            })
+            .execute(conn)
+    })?;
+
+    Ok(Json::from(res))
+}
+
+/// Removie a recipe from the user's favorite recipes
+#[utoipa::path(
+        delete,
+        path = "/{user_id}/favorites",
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Recipe was deleted from the user's favorites", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn delete_favorites(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    recipe_id_str: String, // NOTE: This is just the body as a string
+) -> Result<Json<usize>> {
+    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
+
+    let res = state.query_db(|conn| {
+        delete(users_favorite_recipes::table)
+            .filter(users_favorite_recipes::user_id.eq(user.id))
+            .filter(users_favorite_recipes::recipe_id.eq(recipe_id))
+            .execute(conn)
+    })?;
+
+    Ok(Json::from(res))
+}
+
 /// Get the user's recipe queue
 #[utoipa::path(
         get,
@@ -123,40 +228,78 @@ async fn get_queue(
     Ok(Json(queued_recipes))
 }
 
-/// Middleware to authorize users' requests.
-pub async fn user_auth(
-    Path(user_id): Path<UserId>,
+/// Add to the user's recipe queue. Puts it at the end of the queue (highest queue number).
+#[utoipa::path(
+        post,
+        path = "/{user_id}/queue",
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Recipe was added to the user's queue", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn post_queue(
+    Extension(user): Extension<User>,
     State(state): State<AppState>,
-    mut req: Request,
-    next: Next,
-) -> Result<Response> {
-    let auth_header = req
-        .headers()
-        .get(http::header::AUTHORIZATION)
-        .and_then(|header| header.to_str().ok());
+    recipe_id_str: String, // NOTE: This is just the body as a string
+) -> Result<Json<usize>> {
+    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
 
-    let auth_header = if let Some(auth_header) = auth_header {
-        auth_header
-    } else {
-        return Err(Error::AuthNoToken);
-    };
+    // Get the queue number for this recipe. This is either:
+    //  1. the maximum queue number for the user + 1, or (if it doesn't exist)
+    //  2. 0 (if there are no queued recipes)
+    let queue_number = state
+        .query_db(|conn| {
+            users_queued_recipes::table
+                .filter(users_queued_recipes::user_id.eq(user.id))
+                .select(max(users_queued_recipes::queue_number))
+                .get_result::<Option<i32>>(conn)
+        })?
+        .map(|x| x + 1) // maximum number + 1 is the new queue number, or...
+        .unwrap_or(0); // default to 0 if it doesn't exist
 
-    let user = state.query_db(|conn| {
-        // TODO: Authorize like this:
-        //  1. Get device id from auth token
-        //  2. check device id hash matches db entry for a user
-        //  3. check user id matches device id user
-        //  4. if match, authorized! if no match, unauthorized!
-
-        let _ = auth_header; // NOTE: only here so we get rid of unused variable warning above
-
-        users::table
-            .filter(users::id.eq(user_id))
-            .select(User::as_select())
-            .get_result(conn)
+    let res = state.query_db(|conn| {
+        insert_into(users_queued_recipes::table)
+            .values(&UserQueuedRecipe {
+                user_id: user.id,
+                recipe_id,
+                queue_number,
+            })
+            .execute(conn)
     })?;
 
-    req.extensions_mut().insert(user);
+    Ok(Json::from(res))
+}
 
-    Ok(next.run(req).await)
+/// Remove from the user's recipe queue
+#[utoipa::path(
+        delete,
+        path = "/{user_id}/queue",
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Recipe was deleted from the user's queue", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn delete_queue(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    recipe_id_str: String, // NOTE: This is just the body as a string
+) -> Result<Json<usize>> {
+    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
+
+    let res = state.query_db(|conn| {
+        delete(users_queued_recipes::table)
+            .filter(users_queued_recipes::user_id.eq(user.id))
+            .filter(users_queued_recipes::recipe_id.eq(recipe_id))
+            .execute(conn)
+    })?;
+
+    Ok(Json::from(res))
 }
