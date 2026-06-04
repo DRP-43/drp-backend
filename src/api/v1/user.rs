@@ -144,6 +144,7 @@ async fn get_favorites_ids(
         params(
             ("user_id" = Uuid, Path, description = "UUID of the user")
         ),
+        request_body(content = inline(Uuid), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's favorites", body = usize)
@@ -177,6 +178,7 @@ async fn post_favorites(
         params(
             ("user_id" = Uuid, Path, description = "UUID of the user")
         ),
+        request_body(content = inline(Uuid), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's favorites", body = usize)
@@ -239,6 +241,7 @@ async fn get_queue(
         params(
             ("user_id" = Uuid, Path, description = "UUID of the user")
         ),
+        request_body(content = inline(Uuid), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's queue", body = usize)
@@ -286,6 +289,7 @@ async fn post_queue(
         params(
             ("user_id" = Uuid, Path, description = "UUID of the user")
         ),
+        request_body(content = inline(Uuid), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's queue", body = usize)
