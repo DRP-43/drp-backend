@@ -1,6 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    recipe_reviews (user_id, recipe_id) {
+        user_id -> Uuid,
+        recipe_id -> Uuid,
+        rating -> Int4,
+    }
+}
+
+diesel::table! {
     recipes (id) {
         id -> Uuid,
         name -> Varchar,
@@ -11,7 +19,8 @@ diesel::table! {
 diesel::table! {
     users (id) {
         id -> Uuid,
-        __is_dev -> Bool,
+        #[sql_name = "__is_dev"]
+        __is_dev_ -> Bool,
     }
 }
 
@@ -30,12 +39,15 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(recipe_reviews -> recipes (recipe_id));
+diesel::joinable!(recipe_reviews -> users (user_id));
 diesel::joinable!(users_favorite_recipes -> recipes (recipe_id));
 diesel::joinable!(users_favorite_recipes -> users (user_id));
 diesel::joinable!(users_queued_recipes -> recipes (recipe_id));
 diesel::joinable!(users_queued_recipes -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    recipe_reviews,
     recipes,
     users,
     users_favorite_recipes,

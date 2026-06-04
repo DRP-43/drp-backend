@@ -15,7 +15,8 @@ pub struct User {
     pub id: UserId,
 
     /// Whether or not this is a development/testing user (FOR DEVELEOPMENT ONLY)
-    pub __is_dev: bool,
+    #[cfg(debug_assertions)]
+    pub __is_dev_: bool,
 }
 
 pub type RecipeId = Uuid;
