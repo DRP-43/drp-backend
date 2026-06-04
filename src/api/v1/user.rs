@@ -1,12 +1,10 @@
+use super::middlewares;
 use crate::api::AppState;
 use crate::errors::*;
 use crate::models::*;
 use crate::schema::*;
-use axum::extract::{Path, Request, State};
-use axum::http;
+use axum::extract::State;
 use axum::middleware;
-use axum::middleware::Next;
-use axum::response::Response;
 use axum::{Extension, Json};
 use diesel::dsl::*;
 use diesel::prelude::*;
@@ -49,45 +47,10 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_user))
         .routes(routes!(get_favorites, post_favorites, delete_favorites))
         .routes(routes!(get_queue, post_queue, delete_queue))
-        .route_layer(middleware::from_fn_with_state(state, user_auth))
-}
-
-/// Middleware to authorize users' requests.
-pub async fn user_auth(
-    Path(user_id): Path<UserId>,
-    State(state): State<AppState>,
-    mut req: Request,
-    next: Next,
-) -> Result<Response> {
-    let auth_header = req
-        .headers()
-        .get(http::header::AUTHORIZATION)
-        .and_then(|header| header.to_str().ok());
-
-    let auth_header = if let Some(auth_header) = auth_header {
-        auth_header
-    } else {
-        return Err(Error::AuthNoToken);
-    };
-
-    let user = state.query_db(|conn| {
-        // TODO: Authorize like this:
-        //  1. Get device id from auth token
-        //  2. check device id hash matches db entry for a user
-        //  3. check user id matches device id user
-        //  4. if match, authorized! if no match, unauthorized!
-
-        let _ = auth_header; // NOTE: only here so we get rid of unused variable warning above
-
-        users::table
-            .filter(users::id.eq(user_id))
-            .select(User::as_select())
-            .get_result(conn)
-    })?;
-
-    req.extensions_mut().insert(user);
-
-    Ok(next.run(req).await)
+        .route_layer(middleware::from_fn_with_state(
+            state,
+            middlewares::auth_get_user,
+        ))
 }
 
 /************************************************************************************************

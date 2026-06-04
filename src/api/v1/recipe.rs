@@ -1,14 +1,12 @@
+use super::middlewares;
 use crate::api::AppState;
 use crate::errors::*;
 use crate::models::*;
 use crate::schema::*;
 use axum::Extension;
-use axum::extract::Request;
+use axum::Json;
 use axum::extract::State;
 use axum::middleware;
-use axum::middleware::Next;
-use axum::response::Response;
-use axum::{Json, extract::Path};
 use bigdecimal::BigDecimal;
 use bigdecimal::ToPrimitive;
 use diesel::dsl::*;
@@ -25,7 +23,10 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_recipe))
         .routes(routes!(get_recipe_rating))
         .routes(routes!(get_recipe_num_reviews))
-        .route_layer(middleware::from_fn_with_state(state, get_recipe_from_db))
+        .route_layer(middleware::from_fn_with_state(
+            state,
+            middlewares::get_recipe,
+        ))
 }
 
 /// Get information for the `recipe_id` recipe.
@@ -95,23 +96,4 @@ async fn get_recipe_num_reviews(
         .map(Json::from)?;
 
     Ok(result)
-}
-
-/// Middleware to get the recipe from the database.
-async fn get_recipe_from_db(
-    Path(recipe_id): Path<RecipeId>,
-    State(state): State<AppState>,
-    mut req: Request,
-    next: Next,
-) -> Result<Response> {
-    let recipe = state.query_db(|conn| {
-        recipes::table
-            .filter(recipes::id.eq(recipe_id))
-            .select(Recipe::as_select())
-            .get_result(conn)
-    })?;
-
-    req.extensions_mut().insert(recipe);
-
-    Ok(next.run(req).await)
 }
