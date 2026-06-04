@@ -33,6 +33,9 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
 #[utoipa::path(
         get,
         path = "/{recipe_id}",
+        params(
+            ("recipe_id" = Uuid, Path, description = "UUID of the recipe")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The recipe", body = Recipe)
@@ -47,6 +50,9 @@ async fn get_recipe(Extension(recipe): Extension<Recipe>) -> Json<Recipe> {
 #[utoipa::path(
         get,
         path = "/{recipe_id}/rating",
+        params(
+            ("recipe_id" = Uuid, Path, description = "UUID of the recipe")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The recipe", body = f64)
@@ -76,6 +82,9 @@ async fn get_recipe_rating(
 #[utoipa::path(
         get,
         path = "/{recipe_id}/num_reviews",
+        params(
+            ("recipe_id" = Uuid, Path, description = "UUID of the recipe")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The number of reviews for the recipe", body = i64)

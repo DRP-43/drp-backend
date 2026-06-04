@@ -61,6 +61,9 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
 #[utoipa::path(
         get,
         path = "/{user_id}",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's information", body = User)
@@ -78,6 +81,9 @@ async fn get_user(Extension(user): Extension<User>) -> Json<User> {
 #[utoipa::path(
         get,
         path = "/{user_id}/favorites",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
@@ -105,6 +111,9 @@ async fn get_favorites(
 #[utoipa::path(
         post,
         path = "/{user_id}/favorites",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's favorites", body = usize)
@@ -117,10 +126,8 @@ async fn get_favorites(
 async fn post_favorites(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    recipe_id_str: String, // NOTE: This is just the body as a string
+    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
-    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
-
     let res = state.query_db(|conn| {
         insert_into(users_favorite_recipes::table)
             .values(&UserFavoritedRecipe {
@@ -137,6 +144,9 @@ async fn post_favorites(
 #[utoipa::path(
         delete,
         path = "/{user_id}/favorites",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's favorites", body = usize)
@@ -149,10 +159,8 @@ async fn post_favorites(
 async fn delete_favorites(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    recipe_id_str: String, // NOTE: This is just the body as a string
+    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
-    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
-
     let res = state.query_db(|conn| {
         delete(users_favorite_recipes::table)
             .filter(users_favorite_recipes::user_id.eq(user.id))
@@ -167,6 +175,9 @@ async fn delete_favorites(
 #[utoipa::path(
         get,
         path = "/{user_id}/queue",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's recipe queue, ascending", body = Vec<Recipe>)
@@ -195,6 +206,9 @@ async fn get_queue(
 #[utoipa::path(
         post,
         path = "/{user_id}/queue",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's queue", body = usize)
@@ -207,10 +221,8 @@ async fn get_queue(
 async fn post_queue(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    recipe_id_str: String, // NOTE: This is just the body as a string
+    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
-    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
-
     // Get the queue number for this recipe. This is either:
     //  1. the maximum queue number for the user + 1, or (if it doesn't exist)
     //  2. 0 (if there are no queued recipes)
@@ -241,6 +253,9 @@ async fn post_queue(
 #[utoipa::path(
         delete,
         path = "/{user_id}/queue",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's queue", body = usize)
@@ -253,10 +268,8 @@ async fn post_queue(
 async fn delete_queue(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    recipe_id_str: String, // NOTE: This is just the body as a string
+    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
-    let recipe_id: RecipeId = RecipeId::parse_str(&recipe_id_str)?;
-
     let res = state.query_db(|conn| {
         delete(users_queued_recipes::table)
             .filter(users_queued_recipes::user_id.eq(user.id))
