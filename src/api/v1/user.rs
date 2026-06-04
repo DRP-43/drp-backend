@@ -46,6 +46,7 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::with_openapi(UserApiDoc::openapi())
         .routes(routes!(get_user))
         .routes(routes!(get_favorites, post_favorites, delete_favorites))
+        .routes(routes!(get_favorites_ids))
         .routes(routes!(get_queue, post_queue, delete_queue))
         .route_layer(middleware::from_fn_with_state(
             state,
@@ -101,6 +102,35 @@ async fn get_favorites(
         UserFavoritedRecipe::belonging_to(&user)
             .inner_join(recipes::table)
             .select(Recipe::as_select())
+            .load(conn)
+    })?;
+
+    Ok(Json(favorited_recipes))
+}
+
+/// Get the user's favorite recipes, but only the ids
+#[utoipa::path(
+        get,
+        path = "/{user_id}/favorites/id",
+        params(
+            ("user_id" = Uuid, Path, description = "UUID of the user")
+        ),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "The user's favorited recipes ids", body = Vec<Uuid>)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn get_favorites_ids(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<RecipeId>>> {
+    let favorited_recipes = state.query_db(|conn| {
+        UserFavoritedRecipe::belonging_to(&user)
+            .select(users_favorite_recipes::recipe_id)
             .load(conn)
     })?;
 
