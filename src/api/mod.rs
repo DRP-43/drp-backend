@@ -1,4 +1,3 @@
-mod docs;
 mod v1;
 
 use axum::{Router, http::StatusCode, routing::get};
@@ -37,9 +36,17 @@ impl AppState {
     }
 }
 
+#[derive(OpenApi)]
+#[openapi(
+    nest(
+        (path = "/v1", api = v1::V1ApiDoc)
+    )
+)]
+pub struct ApiDoc;
+
 /// Get the top-level root router for the app.
 pub fn router(state: AppState) -> Router {
-    let (v1, docs) = v1::router(docs::ApiDoc::openapi(), state.clone());
+    let (v1, docs) = v1::router(state.clone());
 
     Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", docs))

@@ -6,7 +6,8 @@
 [dependencies]
     anyhow             = "^1.0"
     axum               = { version = "^0.8", features = ["macros"] }
-    diesel             = { version = "^2.3", features = ["postgres", "uuid"] }
+    bigdecimal         = { version = "^0.4", features = ["serde"] }
+    diesel             = { version = "^2.3", features = ["postgres", "numeric", "uuid"] }
     dotenvy            = "^0.15"
     serde              = { version = "^1.0", features = ["derive"] }
     thiserror          = "^2.0"

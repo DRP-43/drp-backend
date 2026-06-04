@@ -69,3 +69,21 @@ pub struct UserQueuedRecipe {
     /// The queue number for the recipe.
     pub queue_number: i32,
 }
+
+/// A review for a recipe by a user
+#[derive(Identifiable, Selectable, Queryable, Associations, Debug)]
+#[diesel(table_name = crate::schema::recipe_reviews)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(belongs_to(User))]
+#[diesel(belongs_to(Recipe))]
+#[diesel(primary_key(user_id, recipe_id))]
+pub struct RecipeReview {
+    /// The ID for the user.
+    pub user_id: UserId,
+
+    /// The ID for the recipe.
+    pub recipe_id: RecipeId,
+
+    /// The rating the user gave the recipe.
+    pub rating: i16,
+}
