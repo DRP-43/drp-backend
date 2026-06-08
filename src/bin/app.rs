@@ -1,3 +1,5 @@
+#![cfg(feature = "bin-features")]
+
 use diesel::{Connection, PgConnection};
 use dotenvy::dotenv;
 use drp_backend::api;

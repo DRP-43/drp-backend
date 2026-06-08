@@ -1,15 +1,22 @@
-use ::serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "db")]
 use diesel::prelude::*;
+
+#[cfg(feature = "api")]
 use utoipa::ToSchema;
 
 pub type UserId = i64;
 
 /// A user
-#[derive(
-    Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize, Insertable,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "db",
+    derive(Queryable, Selectable, Identifiable, Insertable,)
 )]
-#[diesel(table_name = crate::schema::users)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::users))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub struct User {
     /// The ID for the user.
     pub id: UserId,
@@ -22,11 +29,14 @@ pub struct User {
 pub type RecipeId = i64;
 
 /// A recipe that a user has favorited
-#[derive(
-    Queryable, Selectable, Identifiable, PartialEq, Debug, Clone, ToSchema, Serialize, Insertable,
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "db",
+    derive(Queryable, Selectable, Identifiable, Insertable,)
 )]
-#[diesel(table_name = crate::schema::recipes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::recipes))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub struct Recipe {
     /// The ID for the recipe.
     pub id: RecipeId,
@@ -39,12 +49,16 @@ pub struct Recipe {
 }
 
 /// A recipe favorited by a user.
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
-#[diesel(table_name = crate::schema::users_favorite_recipes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(belongs_to(User))]
-#[diesel(belongs_to(Recipe))]
-#[diesel(primary_key(user_id, recipe_id))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "db",
+    derive(Queryable, Selectable, Identifiable, Insertable, Associations)
+)]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::users_favorite_recipes))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(User)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(Recipe)))]
+#[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct UserFavoritedRecipe {
     /// The ID for the user.
     pub user_id: UserId,
@@ -54,12 +68,16 @@ pub struct UserFavoritedRecipe {
 }
 
 /// A recipe queued by a user
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
-#[diesel(table_name = crate::schema::users_queued_recipes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(belongs_to(User))]
-#[diesel(belongs_to(Recipe))]
-#[diesel(primary_key(user_id, recipe_id))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "db",
+    derive(Queryable, Selectable, Identifiable, Insertable, Associations)
+)]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::users_queued_recipes))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(User)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(Recipe)))]
+#[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct UserQueuedRecipe {
     /// The ID for the user.
     pub user_id: UserId,
@@ -72,12 +90,16 @@ pub struct UserQueuedRecipe {
 }
 
 /// A review for a recipe by a user
-#[derive(Identifiable, Selectable, Queryable, Associations, Debug, Insertable)]
-#[diesel(table_name = crate::schema::recipe_reviews)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-#[diesel(belongs_to(User))]
-#[diesel(belongs_to(Recipe))]
-#[diesel(primary_key(user_id, recipe_id))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "db",
+    derive(Queryable, Selectable, Identifiable, Insertable, Associations)
+)]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::recipe_reviews))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(User)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(Recipe)))]
+#[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct RecipeReview {
     /// The ID for the user.
     pub user_id: UserId,

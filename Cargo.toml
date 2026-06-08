@@ -4,21 +4,58 @@
     version = "0.1.0"
 
 [dependencies]
-    anyhow             = "^1.0"
-    axum               = { version = "^0.8", features = ["macros"] }
-    bigdecimal         = { version = "^0.4", features = ["serde"] }
-    diesel             = { version = "^2.3", features = ["postgres", "numeric"] }
-    dotenvy            = "^0.15"
-    serde              = { version = "^1.0", features = ["derive"] }
-    thiserror          = "^2.0"
-    tokio              = { version = "^1.52", features = ["full"] }
-    tower              = "^0.5"
-    tower-http         = { version = "^0.6", features = ["timeout", "trace"] }
-    tracing            = "^0.1"
-    tracing-subscriber = "^0.3"
-    utoipa             = { version = "^5.5", features = ["axum_extras"] }
-    utoipa-axum        = "^0.2"
-    utoipa-swagger-ui  = { version = "^9.0", features = ["axum", "reqwest"] }
+    anyhow = { version = "^1.0", optional = true }
+    axum = { version = "^0.8", features = ["macros"], optional = true }
+    bigdecimal = { version = "^0.4", features = ["serde"], optional = true }
+    diesel = { version = "^2.3", features = [
+        "postgres",
+        "numeric",
+    ], optional = true }
+    dotenvy = { version = "^0.15", optional = true }
+    serde = { version = "^1.0", features = ["derive"] }
+    thiserror = "^2.0"
+    tokio = { version = "^1.52", features = ["full"], optional = true }
+    tower = { version = "^0.5", optional = true }
+    tower-http = { version = "^0.6", features = [
+        "timeout",
+        "trace",
+    ], optional = true }
+    tracing = { version = "^0.1", optional = true }
+    tracing-subscriber = { version = "^0.3", optional = true }
+    utoipa = { version = "^5.5", features = ["axum_extras"], optional = true }
+    utoipa-axum = { version = "^0.2", optional = true }
+    utoipa-swagger-ui = { version = "^9.0", features = [
+        "axum",
+        "reqwest",
+    ], optional = true }
+
+[features]
+    default = ["bin-features"]
+
+    # Necessary for building binary
+    bin-features = [
+        "db",
+        "api",
+        "dep:dotenvy",
+        "dep:anyhow",
+        "dep:tracing",
+        "dep:tracing-subscriber",
+    ]
+
+    # Allows for database connectivity in lib
+    db = ["dep:diesel", "dep:bigdecimal"]
+
+    # Allows for API publishing in lib
+    api = [
+        "dep:axum",
+        "dep:dotenvy",
+        "dep:tokio",
+        "dep:tower",
+        "dep:tower-http",
+        "dep:utoipa",
+        "dep:utoipa-axum",
+        "dep:utoipa-swagger-ui",
+    ]
 
 [lib]
     name = "drp_backend"
