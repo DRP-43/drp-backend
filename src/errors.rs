@@ -21,17 +21,13 @@ pub enum Error {
     /// User failed to authenticate properly, device ID mismatch
     #[error("Failed to authenticate: device id {id} is not associated with a user")]
     AuthDeviceId { id: String },
-
-    /// Failed to parse or use UUIDs properly.
-    #[error("UUID error: {0}")]
-    Uuid(#[from] uuid::Error),
 }
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         let err_str = format!("{self}");
         let err_code = match self {
-            Error::DB(_) | Error::DBConn(_) | Error::Uuid(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::DB(_) | Error::DBConn(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::AuthNoToken | Error::AuthDeviceId { .. } => StatusCode::UNAUTHORIZED,
         };
 

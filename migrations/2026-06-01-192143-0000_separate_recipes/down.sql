@@ -1,2 +1,2 @@
 -- This file should undo anything in `up.sql`
-ALTER TABLE "recipes" ADD "user_id" UUID; 
+ALTER TABLE "recipes" ADD "user_id" INT8; 

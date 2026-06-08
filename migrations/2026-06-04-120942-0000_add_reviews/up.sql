@@ -1,8 +1,8 @@
 -- Your SQL goes here
 
 CREATE TABLE "recipe_reviews" (
-    "user_id" UUID NOT NULL,
-    "recipe_id" UUID NOT NULL,
+    "user_id" INT8 NOT NULL,
+    "recipe_id" INT8 NOT NULL,
     "rating" INT2 NOT NULL CHECK (0 <= "rating" AND "rating" <= 5),
     PRIMARY KEY ("user_id", "recipe_id"),
     FOREIGN KEY ("user_id") REFERENCES "users" ("id"),

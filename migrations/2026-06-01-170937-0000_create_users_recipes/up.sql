@@ -1,11 +1,11 @@
 CREATE TABLE "users" (
-	"id" UUID NOT NULL PRIMARY KEY,
+	"id" INT8 NOT NULL PRIMARY KEY,
 	"__is_dev" BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE "recipes" (
-	"id" UUID NOT NULL PRIMARY KEY,
-	"user_id" UUID NOT NULL,
+	"id" INT8 NOT NULL PRIMARY KEY,
+	"user_id" INT8 NOT NULL,
 	"name" VARCHAR NOT NULL,
 	"ingredients" TEXT[] NOT NULL
 		check (

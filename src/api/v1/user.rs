@@ -63,7 +63,7 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
         get,
         path = "/{user_id}",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
@@ -83,7 +83,7 @@ async fn get_user(Extension(user): Extension<User>) -> Json<User> {
         get,
         path = "/{user_id}/favorites",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
@@ -113,11 +113,11 @@ async fn get_favorites(
         get,
         path = "/{user_id}/favorites/id",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
-            (status = OK, description = "The user's favorited recipes ids", body = Vec<Uuid>)
+            (status = OK, description = "The user's favorited recipes ids", body = Vec<UserId>)
         ),
         security(
             ("user_device_id" = [])
@@ -142,9 +142,9 @@ async fn get_favorites_ids(
         post,
         path = "/{user_id}/favorites",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
-        request_body(content = inline(Uuid), content_type = "application/json"),
+        request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's favorites", body = usize)
@@ -157,7 +157,7 @@ async fn get_favorites_ids(
 async fn post_favorites(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
+    Json(recipe_id): Json<RecipeId>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
     let res = state.query_db(|conn| {
         insert_into(users_favorite_recipes::table)
@@ -176,9 +176,9 @@ async fn post_favorites(
         delete,
         path = "/{user_id}/favorites",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
-        request_body(content = inline(Uuid), content_type = "application/json"),
+        request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's favorites", body = usize)
@@ -191,7 +191,7 @@ async fn post_favorites(
 async fn delete_favorites(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
+    Json(recipe_id): Json<RecipeId>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
     let res = state.query_db(|conn| {
         delete(users_favorite_recipes::table)
@@ -208,7 +208,7 @@ async fn delete_favorites(
         get,
         path = "/{user_id}/queue",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
@@ -239,9 +239,9 @@ async fn get_queue(
         post,
         path = "/{user_id}/queue",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
-        request_body(content = inline(Uuid), content_type = "application/json"),
+        request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's queue", body = usize)
@@ -254,7 +254,7 @@ async fn get_queue(
 async fn post_queue(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
+    Json(recipe_id): Json<RecipeId>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
     // Get the queue number for this recipe. This is either:
     //  1. the maximum queue number for the user + 1, or (if it doesn't exist)
@@ -287,9 +287,9 @@ async fn post_queue(
         delete,
         path = "/{user_id}/queue",
         params(
-            ("user_id" = Uuid, Path, description = "UUID of the user")
+            ("user_id" = UserId, Path, description = "UUID of the user")
         ),
-        request_body(content = inline(Uuid), content_type = "application/json"),
+        request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's queue", body = usize)
@@ -302,7 +302,7 @@ async fn post_queue(
 async fn delete_queue(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
-    Json(recipe_id): Json<uuid::Uuid>, // NOTE: This is just the body as a string parsed as a UUID
+    Json(recipe_id): Json<RecipeId>, // NOTE: This is just the body as a string parsed as a UUID
 ) -> Result<Json<usize>> {
     let res = state.query_db(|conn| {
         delete(users_queued_recipes::table)

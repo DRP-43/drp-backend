@@ -1,9 +1,8 @@
 use ::serde::Serialize;
 use diesel::prelude::*;
 use utoipa::ToSchema;
-use uuid::*;
 
-pub type UserId = Uuid;
+pub type UserId = i64;
 
 /// A user
 #[derive(
@@ -13,7 +12,6 @@ pub type UserId = Uuid;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
     /// The ID for the user.
-    #[schema(value_type = String, format = Uuid)]
     pub id: UserId,
 
     /// Whether or not this is a development/testing user (FOR DEVELEOPMENT ONLY)
@@ -21,7 +19,7 @@ pub struct User {
     pub __is_dev_: bool,
 }
 
-pub type RecipeId = Uuid;
+pub type RecipeId = i64;
 
 /// A recipe that a user has favorited
 #[derive(
@@ -31,7 +29,6 @@ pub type RecipeId = Uuid;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Recipe {
     /// The ID for the recipe.
-    #[schema(value_type = String, format = Uuid)]
     pub id: RecipeId,
 
     /// The name of the recipe.

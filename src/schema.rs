@@ -2,15 +2,15 @@
 
 diesel::table! {
     recipe_reviews (user_id, recipe_id) {
-        user_id -> Uuid,
-        recipe_id -> Uuid,
+        user_id -> Int8,
+        recipe_id -> Int8,
         rating -> Int2,
     }
 }
 
 diesel::table! {
     recipes (id) {
-        id -> Uuid,
+        id -> Int8,
         name -> Varchar,
         ingredients -> Array<Text>,
     }
@@ -18,7 +18,7 @@ diesel::table! {
 
 diesel::table! {
     users (id) {
-        id -> Uuid,
+        id -> Int8,
         #[sql_name = "__is_dev"]
         __is_dev_ -> Bool,
     }
@@ -26,15 +26,15 @@ diesel::table! {
 
 diesel::table! {
     users_favorite_recipes (user_id, recipe_id) {
-        user_id -> Uuid,
-        recipe_id -> Uuid,
+        user_id -> Int8,
+        recipe_id -> Int8,
     }
 }
 
 diesel::table! {
     users_queued_recipes (user_id, recipe_id) {
-        user_id -> Uuid,
-        recipe_id -> Uuid,
+        user_id -> Int8,
+        recipe_id -> Int8,
         queue_number -> Int4,
     }
 }
