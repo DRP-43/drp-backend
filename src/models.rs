@@ -12,11 +12,6 @@ use ::{
 #[cfg(feature = "api")]
 use ::utoipa::ToSchema;
 
-// use diesel::deserialize::FromSql;
-// use diesel::pg::Pg;
-// use diesel::serialize::{Output, ToSql};
-// use std::io::Write;
-
 pub type UserId = i64;
 
 /// A user
