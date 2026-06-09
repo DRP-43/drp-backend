@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
-    info!("Server running on {address}...");
+    info!("Server running on http://{address}...");
 
     // Get the database url
     let database_url = env::var("DATABASE_URL")?;
