@@ -1,5 +1,3 @@
-#![cfg(feature = "api")]
-
 mod v1;
 
 use axum::{Router, http::StatusCode, routing::get};

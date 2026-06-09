@@ -1,5 +1,3 @@
-#![cfg(feature = "db")]
-
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
@@ -14,7 +12,8 @@ diesel::table! {
     recipes (id) {
         id -> Int8,
         name -> Varchar,
-        ingredients -> Array<Text>,
+        body -> Text,
+        ingredients -> Array<Jsonb>,
     }
 }
 
