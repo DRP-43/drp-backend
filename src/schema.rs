@@ -33,6 +33,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    users_inventory (user_id, name) {
+        user_id -> Int8,
+        #[max_length = 128]
+        name -> Varchar,
+        quantity -> Float8,
+        #[max_length = 8]
+        unit -> Varchar,
+        #[max_length = 8]
+        category_id -> Varchar,
+    }
+}
+
+diesel::table! {
     users_queued_recipes (user_id, recipe_id) {
         user_id -> Int8,
         recipe_id -> Int8,
@@ -44,6 +57,7 @@ diesel::joinable!(recipe_reviews -> recipes (recipe_id));
 diesel::joinable!(recipe_reviews -> users (user_id));
 diesel::joinable!(users_favorite_recipes -> recipes (recipe_id));
 diesel::joinable!(users_favorite_recipes -> users (user_id));
+diesel::joinable!(users_inventory -> users (user_id));
 diesel::joinable!(users_queued_recipes -> recipes (recipe_id));
 diesel::joinable!(users_queued_recipes -> users (user_id));
 
@@ -52,5 +66,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     recipes,
     users,
     users_favorite_recipes,
+    users_inventory,
     users_queued_recipes,
 );

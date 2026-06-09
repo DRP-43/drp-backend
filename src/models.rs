@@ -3,10 +3,12 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "db")]
 use ::{
     diesel::deserialize::FromSql,
+    diesel::deserialize::FromSqlRow,
+    diesel::expression::AsExpression,
     diesel::pg::Pg,
     diesel::prelude::*,
     diesel::serialize::{Output, ToSql},
-    diesel::sql_types::Jsonb,
+    diesel::sql_types,
 };
 
 #[cfg(feature = "api")]
@@ -60,9 +62,9 @@ pub struct Recipe {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "api", derive(ToSchema))]
-// #[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
-// #[cfg_attr(feature="db", diesel(table_name = crate::schema::TODO)]
-// #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
+#[cfg_attr(feature="db", diesel(table_name = crate::schema::users_inventory))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub struct Ingredient {
     /// Name of the ingredient
     pub name: String,
@@ -79,8 +81,10 @@ pub struct Ingredient {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "api", derive(ToSchema))]
 #[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
+#[cfg_attr(feature="db", diesel(sql_type = sql_types::VarChar))]
 pub enum IngredientCategory {
     #[serde(rename = "fruits")]
     Fruit,
@@ -167,22 +171,41 @@ pub struct RecipeReview {
  * MANUAL IMPLS *
  ****************/
 
-// NOTE: Need to impl manually so we can cast `Ingredient` to `Jsonb` PgSQL types and v.v.
+// NOTE: Need to impl manually so we can cast `Ingredient` to `sql_types::Jsonb` PgSQL types and v.v.
 #[cfg(feature = "db")]
-impl FromSql<Jsonb, Pg> for Ingredient {
+impl FromSql<sql_types::Jsonb, Pg> for Ingredient {
     fn from_sql(
         bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
     ) -> diesel::deserialize::Result<Self> {
-        let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
+        let value = <serde_json::Value as FromSql<sql_types::Jsonb, Pg>>::from_sql(bytes)?;
         Ok(serde_json::from_value(value)?)
     }
 }
 
-// NOTE: Need to impl manually so we can cast `Ingredient` to `Jsonb` PgSQL types and v.v.
+// NOTE: Need to impl manually so we can cast `Ingredient` to `sql_types::Jsonb` PgSQL types and v.v.
 #[cfg(feature = "db")]
-impl ToSql<Jsonb, Pg> for Ingredient {
+impl ToSql<sql_types::Jsonb, Pg> for Ingredient {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> diesel::serialize::Result {
         let value = serde_json::to_value(self)?;
-        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
+        <serde_json::Value as ToSql<sql_types::Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
+    }
+}
+
+#[cfg(feature = "db")]
+impl FromSql<sql_types::VarChar, Pg> for IngredientCategory {
+    fn from_sql(
+        bytes: <Pg as diesel::backend::Backend>::RawValue<'_>,
+    ) -> diesel::deserialize::Result<Self> {
+        let value = <String as FromSql<sql_types::VarChar, Pg>>::from_sql(bytes)?;
+        Ok(serde_json::from_str(&value)?)
+    }
+}
+
+#[cfg(feature = "db")]
+impl ToSql<sql_types::VarChar, Pg> for IngredientCategory {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> diesel::serialize::Result {
+        let value = serde_json::to_value(self)?;
+        let value = value.to_string();
+        <String as ToSql<sql_types::VarChar, Pg>>::to_sql(&value, &mut out.reborrow())
     }
 }

@@ -45,6 +45,7 @@ impl Modify for UserAuthModifier {
 pub fn router(state: AppState) -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::with_openapi(UserApiDoc::openapi())
         .routes(routes!(get_user))
+        .routes(routes!(get_inventory, post_inventory, delete_inventory))
         .routes(routes!(get_favorites, post_favorites, delete_favorites))
         .routes(routes!(get_favorites_ids))
         .routes(routes!(get_queue, post_queue, delete_queue))
@@ -76,6 +77,106 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
 #[axum::debug_handler]
 async fn get_user(Extension(user): Extension<User>) -> Json<User> {
     Json::from(user)
+}
+
+/// Get the user's current inventory
+#[utoipa::path(
+        get,
+        path = "/{user_id}/inventory",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn get_inventory(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<Ingredient>>> {
+    let inventory = state.query_db(|conn| {
+        users_inventory::table
+            .filter(users_inventory::user_id.eq(user.id))
+            // NOTE: Select is necessary so we strip the `user_id` component and can transform the
+            // row into a valid `Ingredient`.
+            .select((
+                users_inventory::name,
+                users_inventory::quantity,
+                users_inventory::unit,
+                users_inventory::category_id,
+            ))
+            .load::<Ingredient>(conn)
+    })?;
+
+    Ok(Json(inventory))
+}
+
+/// Add to the user's inventory
+#[utoipa::path(
+        post,
+        path = "/{user_id}/inventory",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        request_body(content = Ingredient, content_type = "application/json"),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn post_inventory(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    Json(ingredient): Json<Ingredient>,
+) -> Result<Json<usize>> {
+    let res = state.query_db(|conn| {
+        insert_into(users_inventory::table)
+            .values((&ingredient, users_inventory::user_id.eq(user.id)))
+            .execute(conn)
+    })?;
+
+    Ok(Json(res))
+}
+
+/// Remove from the user's inventory
+#[utoipa::path(
+        delete,
+        path = "/{user_id}/inventory",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        request_body(content = String, content_type = "application/json"),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn delete_inventory(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    Json(ingredient_name): Json<String>,
+) -> Result<Json<usize>> {
+    let res = state.query_db(|conn| {
+        delete(users_inventory::table)
+            .filter(users_inventory::user_id.eq(user.id))
+            .filter(users_inventory::name.eq(ingredient_name))
+            .execute(conn)
+    })?;
+
+    Ok(Json(res))
 }
 
 /// Get the user's favorite recipes
