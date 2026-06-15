@@ -104,18 +104,33 @@ pub enum IngredientCategory {
     Other,
 }
 
+#[allow(clippy::to_string_trait_impl)]
+impl ToString for IngredientCategory {
+    fn to_string(&self) -> String {
+        match self {
+            IngredientCategory::Fruit => "fruits",
+            IngredientCategory::Vegetables => "veg",
+            IngredientCategory::Meat => "meat",
+            IngredientCategory::Carb => "carbs",
+            IngredientCategory::Liquid => "liquids",
+            IngredientCategory::Other => "other",
+        }
+        .to_string()
+    }
+}
+
 /// A quote for the price of an [`Ingredient`]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "api", derive(ToSchema))]
 pub struct PriceQuote {
     /// The retailer where the quote came from
-    pub(crate) retailer: String,
+    pub retailer: String,
 
     /// The price (in pence) of the ingredient given.
-    pub(crate) price_pence: usize,
+    pub price_pence: usize,
 
     /// The URL to the product page.
-    pub(crate) product_url: String,
+    pub product_url: String,
 }
 
 /// A recipe favorited by a user.
