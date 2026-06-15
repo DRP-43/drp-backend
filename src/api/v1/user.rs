@@ -88,7 +88,7 @@ async fn get_user(Extension(user): Extension<User>) -> Json<User> {
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
-            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+            (status = OK, description = "The user's inventory", body = Vec<Ingredient>)
         ),
         security(
             ("user_device_id" = [])
@@ -126,7 +126,7 @@ async fn get_inventory(
         request_body(content = Ingredient, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
-            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+            (status = OK, description = "Added to the user's inventory", body = usize)
         ),
         security(
             ("user_device_id" = [])
@@ -157,7 +157,7 @@ async fn post_inventory(
         request_body(content = String, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
-            (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
+            (status = OK, description = "Removed from the user's inventory", body = usize)
         ),
         security(
             ("user_device_id" = [])
@@ -218,7 +218,7 @@ async fn get_favorites(
         ),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
-            (status = OK, description = "The user's favorited recipes ids", body = Vec<UserId>)
+            (status = OK, description = "The user's favorited recipes ids", body = Vec<RecipeId>)
         ),
         security(
             ("user_device_id" = [])
