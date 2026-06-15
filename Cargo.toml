@@ -13,6 +13,7 @@
         "serde_json",
     ], optional = true }
     dotenvy = { version = "^0.15", optional = true }
+    rand = { version = "^0.10.1", optional = true }
     serde = { version = "^1.0", features = ["derive"] }
     serde_json = { version = "^1.0", optional = true }
     thiserror = "^2.0"
@@ -57,6 +58,7 @@
         "dep:utoipa",
         "dep:utoipa-axum",
         "dep:utoipa-swagger-ui",
+        "dep:rand",
     ]
 
 [lib]

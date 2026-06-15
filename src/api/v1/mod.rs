@@ -1,4 +1,5 @@
 mod middlewares;
+mod quotes;
 mod recipe;
 mod user;
 
@@ -19,6 +20,7 @@ pub struct V1ApiDoc;
 pub fn router(state: AppState) -> (Router<AppState>, openapi::OpenApi) {
     OpenApiRouter::<AppState>::with_openapi(V1ApiDoc::openapi())
         .nest("/v1/user", user::router(state.clone()))
-        .nest("/v1/recipe", recipe::router(state))
+        .nest("/v1/recipe", recipe::router(state.clone()))
+        .nest("/v1/quotes", quotes::router(state))
         .split_for_parts()
 }

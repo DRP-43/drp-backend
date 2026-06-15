@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::value::U128Deserializer};
 
 #[cfg(feature = "db")]
 use ::{
@@ -102,6 +102,20 @@ pub enum IngredientCategory {
 
     #[default]
     Other,
+}
+
+/// A quote for the price of an [`Ingredient`]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+pub struct PriceQuote {
+    /// The retailer where the quote came from
+    pub(crate) retailer: String,
+
+    /// The price (in pence) of the ingredient given.
+    pub(crate) price_pence: usize,
+
+    /// The URL to the product page.
+    pub(crate) product_url: String,
 }
 
 /// A recipe favorited by a user.
