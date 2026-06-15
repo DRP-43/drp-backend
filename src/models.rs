@@ -80,7 +80,7 @@ pub struct Ingredient {
     pub category_id: IngredientCategory,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "api", derive(ToSchema))]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
