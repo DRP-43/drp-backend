@@ -27,7 +27,6 @@ pub async fn get_recipe(
 
 /// Middleware to authorize users' requests, and get the user when the path contains `{user_id}`.
 pub async fn auth_get_user(
-    Path(user_id): Path<UserId>,
     State(state): State<AppState>,
     mut req: Request,
     next: Next,
@@ -43,22 +42,37 @@ pub async fn auth_get_user(
         return Err(Error::AuthNoToken);
     };
 
-    let user = state.query_db(|conn| {
-        // TODO: Authorize like this:
-        //  1. Get device id from auth token
-        //  2. check device id hash matches db entry for a user
-        //  3. check user id matches device id user
-        //  4. if match, authorized! if no match, unauthorized!
+    // TODO: Fugly!
+    let user_id: UserId = req
+        .headers()
+        .get("User")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse::<UserId>().ok())
+        .unwrap_or(-1);
 
-        let _ = auth_header; // NOTE: only here so we get rid of unused variable warning above
+    let user: User = state.query_db(|conn| {
+        authorize(conn, user_id, auth_header)?;
 
-        users::table
+        let user = users::table
             .filter(users::id.eq(user_id))
             .select(User::as_select())
-            .get_result(conn)
+            .get_result(conn)?;
+
+        Ok::<User, Error>(user)
     })?;
 
     req.extensions_mut().insert(user);
 
     Ok(next.run(req).await)
+}
+
+/// Authorize a user. `auth_header` is the field of the `Authorization` header. Errors if the user
+/// isn't authed.
+fn authorize(_conn: &mut PgConnection, _user_id: UserId, _auth_header: &str) -> Result<()> {
+    // TODO: Authorize like this:
+    //  1. Get device id from auth token
+    //  2. check device id hash matches db entry for a user
+    //  3. check user id matches device id user
+    //  4. if match, authorized! if no match, unauthorized!
+    Ok(())
 }

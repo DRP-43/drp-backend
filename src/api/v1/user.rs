@@ -13,6 +13,7 @@ use serde::Serialize;
 use utoipa::Modify;
 use utoipa::OpenApi;
 use utoipa::openapi;
+use utoipa::openapi::security::ApiKeyValue;
 use utoipa::openapi::security::HttpAuthScheme;
 use utoipa::openapi::security::HttpBuilder;
 use utoipa::openapi::security::SecurityScheme;
@@ -39,6 +40,12 @@ impl Modify for UserAuthModifier {
                         .build(),
                 ),
             );
+            schema.add_security_scheme(
+                "user_id",
+                SecurityScheme::ApiKey(openapi::security::ApiKey::Header(
+                    ApiKeyValue::with_description("User", "The user's ID"),
+                )),
+            );
         }
     }
 }
@@ -64,16 +71,14 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
 /// Get the user's information.
 #[utoipa::path(
         get,
-        path = "/{user_id}",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's information", body = User)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -84,16 +89,14 @@ async fn get_user(Extension(user): Extension<User>) -> Json<User> {
 /// Get the user's current inventory
 #[utoipa::path(
         get,
-        path = "/{user_id}/inventory",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/inventory",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's inventory", body = Vec<Ingredient>)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -118,17 +121,15 @@ async fn get_inventory(
 /// Add to the user's inventory
 #[utoipa::path(
         post,
-        path = "/{user_id}/inventory",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/inventory",
         request_body(content = Ingredient, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Added to the user's inventory", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -156,17 +157,15 @@ async fn post_inventory(
 /// Remove from the user's inventory
 #[utoipa::path(
         delete,
-        path = "/{user_id}/inventory",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/inventory",
         request_body(content = String, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Removed from the user's inventory", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -188,16 +187,14 @@ async fn delete_inventory(
 /// Get the user's current shopping list
 #[utoipa::path(
         get,
-        path = "/{user_id}/shopping",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/shopping",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's shopping list", body = Vec<Ingredient>)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -222,17 +219,15 @@ async fn get_shopping(
 /// Add to the user's shopping list
 #[utoipa::path(
         post,
-        path = "/{user_id}/shopping",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/shopping",
         request_body(content = Ingredient, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Added to the user's shopping", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -259,17 +254,15 @@ async fn post_shopping(
 /// Remove from the user's shopping
 #[utoipa::path(
         delete,
-        path = "/{user_id}/shopping",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/shopping",
         request_body(content = String, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Removed from the user's shopping", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -291,16 +284,14 @@ async fn delete_shopping(
 /// Get the user's favorite recipes
 #[utoipa::path(
         get,
-        path = "/{user_id}/favorites",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/favorites",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's favorited recipes", body = Vec<Recipe>)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -323,16 +314,14 @@ async fn get_favorites(
 /// Get the user's favorite recipes, but only the ids
 #[utoipa::path(
         get,
-        path = "/{user_id}/favorites/id",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/favorites/id",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's favorited recipes ids", body = Vec<RecipeId>)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -352,17 +341,15 @@ async fn get_favorites_ids(
 /// Add to the user's favorite recipes
 #[utoipa::path(
         post,
-        path = "/{user_id}/favorites",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/favorites",
         request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's favorites", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -386,17 +373,15 @@ async fn post_favorites(
 /// Removie a recipe from the user's favorite recipes
 #[utoipa::path(
         delete,
-        path = "/{user_id}/favorites",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/favorites",
         request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's favorites", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -418,16 +403,14 @@ async fn delete_favorites(
 /// Get the user's recipe queue
 #[utoipa::path(
         get,
-        path = "/{user_id}/queue",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/queue",
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "The user's recipe queue, ascending", body = Vec<Recipe>)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -450,17 +433,15 @@ async fn get_queue(
 /// Add to the user's recipe queue. Puts it at the end of the queue (highest queue number).
 #[utoipa::path(
         post,
-        path = "/{user_id}/queue",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/queue",
         request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was added to the user's queue", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
@@ -498,17 +479,15 @@ async fn post_queue(
 /// Remove from the user's recipe queue
 #[utoipa::path(
         delete,
-        path = "/{user_id}/queue",
-        params(
-            ("user_id" = UserId, Path, description = "UUID of the user")
-        ),
+        path = "/queue",
         request_body(content = inline(RecipeId), content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe was deleted from the user's queue", body = usize)
         ),
         security(
-            ("user_device_id" = [])
+            ("user_device_id" = []),
+            ("user_id" = [])
         )
     )]
 #[axum::debug_handler]
