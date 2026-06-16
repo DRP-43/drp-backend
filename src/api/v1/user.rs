@@ -46,6 +46,7 @@ pub fn router(state: AppState) -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::with_openapi(UserApiDoc::openapi())
         .routes(routes!(get_user))
         .routes(routes!(get_inventory, post_inventory, delete_inventory))
+        .routes(routes!(get_shopping, post_shopping, delete_shopping))
         .routes(routes!(get_favorites, post_favorites, delete_favorites))
         .routes(routes!(get_favorites_ids))
         .routes(routes!(get_queue, post_queue, delete_queue))
@@ -99,19 +100,16 @@ async fn get_inventory(
     Extension(user): Extension<User>,
     State(state): State<AppState>,
 ) -> Result<Json<Vec<Ingredient>>> {
-    let inventory = state.query_db(|conn| {
-        users_inventory::table
-            .filter(users_inventory::user_id.eq(user.id))
-            // NOTE: Select is necessary so we strip the `user_id` component and can transform the
-            // row into a valid `Ingredient`.
-            .select((
-                users_inventory::name,
-                users_inventory::quantity,
-                users_inventory::unit,
-                users_inventory::category_id,
-            ))
-            .load::<Ingredient>(conn)
-    })?;
+    let inventory = state
+        .query_db(|conn| {
+            users_inventory::table
+                .filter(users_inventory::user_id.eq(user.id))
+                .select(UserInventoryIngredientRow::as_select())
+                .load(conn)
+        })?
+        .into_iter()
+        .map(Ingredient::from)
+        .collect();
 
     Ok(Json(inventory))
 }
@@ -140,7 +138,13 @@ async fn post_inventory(
 ) -> Result<Json<usize>> {
     let res = state.query_db(|conn| {
         insert_into(users_inventory::table)
-            .values((&ingredient, users_inventory::user_id.eq(user.id)))
+            .values(UserInventoryIngredientRow {
+                user_id: user.id,
+                name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                category_id: ingredient.category_id,
+            })
             .execute(conn)
     })?;
 
@@ -173,6 +177,109 @@ async fn delete_inventory(
         delete(users_inventory::table)
             .filter(users_inventory::user_id.eq(user.id))
             .filter(users_inventory::name.eq(ingredient_name))
+            .execute(conn)
+    })?;
+
+    Ok(Json(res))
+}
+
+/// Get the user's current shopping list
+#[utoipa::path(
+        get,
+        path = "/{user_id}/shopping",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "The user's shopping list", body = Vec<Ingredient>)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn get_shopping(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+) -> Result<Json<Vec<Ingredient>>> {
+    let inventory = state
+        .query_db(|conn| {
+            shopping_list::table
+                .filter(shopping_list::user_id.eq(user.id))
+                .select(UserShoppingListRow::as_select())
+                .load(conn)
+        })?
+        .into_iter()
+        .map(Ingredient::from)
+        .collect();
+
+    Ok(Json(inventory))
+}
+
+/// Add to the user's shopping list
+#[utoipa::path(
+        post,
+        path = "/{user_id}/shopping",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        request_body(content = Ingredient, content_type = "application/json"),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Added to the user's shopping", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn post_shopping(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    Json(ingredient): Json<Ingredient>,
+) -> Result<Json<usize>> {
+    let res = state.query_db(|conn| {
+        insert_into(shopping_list::table)
+            .values(UserShoppingListRow {
+                user_id: user.id,
+                name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                category_id: ingredient.category_id,
+            })
+            .execute(conn)
+    })?;
+
+    Ok(Json(res))
+}
+
+/// Remove from the user's shopping
+#[utoipa::path(
+        delete,
+        path = "/{user_id}/shopping",
+        params(
+            ("user_id" = UserId, Path, description = "UUID of the user")
+        ),
+        request_body(content = String, content_type = "application/json"),
+        responses(
+            (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
+            (status = OK, description = "Removed from the user's shopping", body = usize)
+        ),
+        security(
+            ("user_device_id" = [])
+        )
+    )]
+#[axum::debug_handler]
+async fn delete_shopping(
+    Extension(user): Extension<User>,
+    State(state): State<AppState>,
+    Json(ingredient_name): Json<String>,
+) -> Result<Json<usize>> {
+    let res = state.query_db(|conn| {
+        delete(shopping_list::table)
+            .filter(shopping_list::user_id.eq(user.id))
+            .filter(shopping_list::name.eq(ingredient_name))
             .execute(conn)
     })?;
 

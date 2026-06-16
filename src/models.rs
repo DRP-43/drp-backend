@@ -60,11 +60,56 @@ pub struct Recipe {
     pub body: String,
 }
 
+/// An ingredient that a user has in their inventory
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature = "db", diesel(table_name = crate::schema::users_inventory))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+pub(crate) struct UserInventoryIngredientRow {
+    /// The ID for the user.
+    pub user_id: UserId,
+
+    /// Name of the ingredient
+    pub name: String,
+
+    /// Quantity of the ingredient
+    pub quantity: f64,
+
+    /// The "unit", i.e. what measurement unit the ingredient has.
+    pub unit: String,
+
+    /// What category of thing this belongs to.
+    #[serde(default)]
+    pub category_id: IngredientCategory,
+}
+
+/// An ingredient that a user has in their inventory
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature = "db", diesel(table_name = crate::schema::shopping_list))]
+#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
+pub(crate) struct UserShoppingListRow {
+    /// The ID for the user.
+    pub user_id: UserId,
+
+    /// Name of the ingredient
+    pub name: String,
+
+    /// Quantity of the ingredient
+    pub quantity: f64,
+
+    /// The "unit", i.e. what measurement unit the ingredient has.
+    pub unit: String,
+
+    /// What category of thing this belongs to.
+    #[serde(default)]
+    pub category_id: IngredientCategory,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "api", derive(ToSchema))]
-#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
-#[cfg_attr(feature="db", diesel(table_name = crate::schema::users_inventory))]
-#[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub struct Ingredient {
     /// Name of the ingredient
     pub name: String,
@@ -78,6 +123,28 @@ pub struct Ingredient {
     /// What category of thing this belongs to.
     #[serde(default)]
     pub category_id: IngredientCategory,
+}
+
+impl From<UserInventoryIngredientRow> for Ingredient {
+    fn from(value: UserInventoryIngredientRow) -> Self {
+        Self {
+            name: value.name,
+            quantity: value.quantity,
+            unit: value.unit,
+            category_id: value.category_id,
+        }
+    }
+}
+
+impl From<UserShoppingListRow> for Ingredient {
+    fn from(value: UserShoppingListRow) -> Self {
+        Self {
+            name: value.name,
+            quantity: value.quantity,
+            unit: value.unit,
+            category_id: value.category_id,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
