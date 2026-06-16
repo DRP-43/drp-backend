@@ -35,6 +35,7 @@ impl Modify for UserAuthModifier {
                 "user_device_id",
                 SecurityScheme::Http(
                     HttpBuilder::new()
+                        .description(Some("The device ID of the user (corresponding to the user ID in the `User` header)"))
                         .scheme(HttpAuthScheme::Bearer)
                         .bearer_format("JWT")
                         .build(),

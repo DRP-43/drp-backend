@@ -10,7 +10,10 @@ use utoipa_axum::router::OpenApiRouter;
 
 #[derive(OpenApi)]
 #[openapi(
-     nest(
+    info(
+        description = "DRP43 backend API. NOTE: BOTH AUTHORIZATION METHODS MUST BE USED IN ORDER FOR API ACCESS TO WORK! DO NOT LISTEN WHEN IT ACCEPTS ONLY ONE FILLED IN! BOTH MUST BE FILLED IN!",
+    ),
+    nest(
          (path = "/v1/user", api = user::UserApiDoc),
          (path = "/v1/recipe", api = recipe::RecipeApiDoc),
          (path = "/v1/quotes", api = quotes::QuotesApiDoc),
