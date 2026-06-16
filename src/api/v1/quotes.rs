@@ -54,7 +54,7 @@ fn get_fake_quote(rng: &mut SmallRng) -> PriceQuote {
         .expect("This should work!")
         .to_string();
 
-    let mut price_pence: usize = rng.random_range(6..=60) * 5;
+    let mut price_pence: u64 = rng.random_range(6..=60) * 5;
     if price_pence.rem_euclid(10) == 0 {
         price_pence -= 1;
     }

@@ -3,7 +3,7 @@
 CREATE TABLE "users_queued_recipes" (
     "user_id" INT8 NOT NULL,
     "recipe_id" INT8 NOT NULL,
-    "queue_number" INT4 NOT NULL,
+    "queue_number" INT8 NOT NULL,
     PRIMARY KEY ("user_id", "recipe_id"),
     FOREIGN KEY ("user_id") REFERENCES "users" ("id"),
     FOREIGN KEY ("recipe_id") REFERENCES "recipes" ("id")

@@ -20,7 +20,7 @@ pub type UserId = i64;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "db",
-    derive(Queryable, Selectable, Identifiable, Insertable,)
+    derive(Queryable, Selectable, Identifiable, Insertable)
 )]
 #[cfg_attr(feature = "api", derive(ToSchema))]
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::users))]
@@ -40,7 +40,7 @@ pub type RecipeId = i64;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "db",
-    derive(Queryable, Selectable, Identifiable, Insertable,)
+    derive(Queryable, Selectable, Identifiable, Insertable)
 )]
 #[cfg_attr(feature = "api", derive(ToSchema))]
 #[cfg_attr(feature="db", diesel(table_name = crate::schema::recipes))]
@@ -204,7 +204,7 @@ pub struct PriceQuote {
     pub retailer: String,
 
     /// The price (in pence) of the ingredient given.
-    pub price_pence: usize,
+    pub price_pence: u64,
 
     /// The URL to the product page.
     pub product_url: String,
@@ -248,7 +248,7 @@ pub struct UserQueuedRecipe {
     pub recipe_id: RecipeId,
 
     /// The queue number for the recipe.
-    pub queue_number: i32,
+    pub queue_number: i64,
 }
 
 /// A review for a recipe by a user
@@ -257,7 +257,7 @@ pub struct UserQueuedRecipe {
     feature = "db",
     derive(Queryable, Selectable, Identifiable, Insertable, Associations)
 )]
-#[cfg_attr(feature="db", diesel(table_name = crate::schema::recipe_reviews))]
+#[cfg_attr(feature = "db", diesel(table_name = crate::schema::recipe_reviews))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 #[cfg_attr(feature = "db", diesel(belongs_to(User)))]
 #[cfg_attr(feature = "db", diesel(belongs_to(Recipe)))]

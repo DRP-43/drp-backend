@@ -473,7 +473,7 @@ async fn post_queue(
             users_queued_recipes::table
                 .filter(users_queued_recipes::user_id.eq(user.id))
                 .select(max(users_queued_recipes::queue_number))
-                .get_result::<Option<i32>>(conn)
+                .get_result::<Option<i64>>(conn)
         })?
         .map(|x| x + 1) // maximum number + 1 is the new queue number, or...
         .unwrap_or(0); // default to 0 if it doesn't exist

@@ -64,7 +64,7 @@ diesel::table! {
     users_queued_recipes (user_id, recipe_id) {
         user_id -> Int8,
         recipe_id -> Int8,
-        queue_number -> Int4,
+        queue_number -> Int8,
     }
 }
 
