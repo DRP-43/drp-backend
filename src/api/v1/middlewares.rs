@@ -1,4 +1,5 @@
 use crate::api::AppState;
+use crate::db;
 use crate::errors::*;
 use crate::models::*;
 use crate::schema::*;
@@ -17,12 +18,7 @@ pub async fn get_recipe(
     mut req: Request,
     next: Next,
 ) -> Result<Response> {
-    let recipe = state.query_db(|conn| {
-        recipes::table
-            .filter(recipes::id.eq(recipe_id))
-            .select(Recipe::as_select())
-            .get_result(conn)
-    })?;
+    let recipe = state.query_db(|conn| db::get_recipe_from_id(conn, recipe_id))?;
 
     req.extensions_mut().insert(recipe);
 

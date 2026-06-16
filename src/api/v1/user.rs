@@ -1,5 +1,6 @@
 use super::middlewares;
 use crate::api::AppState;
+use crate::db;
 use crate::errors::*;
 use crate::models::*;
 use crate::schema::*;
@@ -308,10 +309,12 @@ async fn get_favorites(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<Recipe>>> {
     let favorited_recipes = state.query_db(|conn| {
-        UserFavoritedRecipe::belonging_to(&user)
+        let rows = UserFavoritedRecipe::belonging_to(&user)
             .inner_join(recipes::table)
-            .select(Recipe::as_select())
-            .load(conn)
+            .select(RecipeRow::as_select())
+            .load(conn)?;
+
+        db::get_recipes_from_rows(conn, rows)
     })?;
 
     Ok(Json(favorited_recipes))
@@ -433,11 +436,12 @@ async fn get_queue(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<Recipe>>> {
     let queued_recipes = state.query_db(|conn| {
-        UserQueuedRecipe::belonging_to(&user)
+        let rows = UserQueuedRecipe::belonging_to(&user)
             .inner_join(recipes::table)
-            .select(Recipe::as_select())
-            .order_by(users_queued_recipes::queue_number.asc())
-            .load(conn)
+            .select(RecipeRow::as_select())
+            .load(conn)?;
+
+        db::get_recipes_from_rows(conn, rows)
     })?;
 
     Ok(Json(queued_recipes))

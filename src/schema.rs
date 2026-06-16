@@ -1,6 +1,19 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    recipe_ingredients (recipe_id, name) {
+        recipe_id -> Int8,
+        #[max_length = 128]
+        name -> Varchar,
+        quantity -> Float8,
+        #[max_length = 8]
+        unit -> Varchar,
+        #[max_length = 8]
+        category_id -> Varchar,
+    }
+}
+
+diesel::table! {
     recipe_reviews (user_id, recipe_id) {
         user_id -> Int8,
         recipe_id -> Int8,
@@ -13,7 +26,7 @@ diesel::table! {
         id -> Int8,
         name -> Varchar,
         body -> Text,
-        ingredients -> Array<Jsonb>,
+        servings -> Int4,
     }
 }
 
@@ -68,6 +81,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(recipe_ingredients -> recipes (recipe_id));
 diesel::joinable!(recipe_reviews -> recipes (recipe_id));
 diesel::joinable!(recipe_reviews -> users (user_id));
 diesel::joinable!(shopping_list -> users (user_id));
@@ -78,6 +92,7 @@ diesel::joinable!(users_queued_recipes -> recipes (recipe_id));
 diesel::joinable!(users_queued_recipes -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    recipe_ingredients,
     recipe_reviews,
     recipes,
     shopping_list,

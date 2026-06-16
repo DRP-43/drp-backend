@@ -63,8 +63,8 @@ async fn get_recipe_rating(
 ) -> Result<Json<f64>> {
     let result = state
         .query_db(|conn| {
-            RecipeReview::belonging_to(&recipe)
-                .inner_join(recipes::table)
+            recipe_reviews::table
+                .filter(recipe_reviews::recipe_id.eq(recipe.id))
                 .select(avg(recipe_reviews::rating))
                 .get_result::<Option<BigDecimal>>(conn)
         })
@@ -94,8 +94,8 @@ async fn get_recipe_num_reviews(
 ) -> Result<Json<i64>> {
     let result = state
         .query_db(|conn| {
-            RecipeReview::belonging_to(&recipe)
-                .inner_join(recipes::table)
+            recipe_reviews::table
+                .filter(recipe_reviews::recipe_id.eq(recipe.id))
                 .select(count(recipe_reviews::rating))
                 .get_result::<i64>(conn)
         })
