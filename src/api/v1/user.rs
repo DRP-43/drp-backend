@@ -143,6 +143,7 @@ async fn post_inventory(
                 name: ingredient.name,
                 quantity: ingredient.quantity,
                 unit: ingredient.unit,
+                expiration_date: ingredient.expiration_date,
                 category_id: ingredient.category_id,
             })
             .execute(conn)

@@ -23,7 +23,7 @@ pub type UserId = i64;
     derive(Queryable, Selectable, Identifiable, Insertable,)
 )]
 #[cfg_attr(feature = "api", derive(ToSchema))]
-#[cfg_attr(feature="db", diesel(table_name = crate::schema::users))]
+#[cfg_attr(feature = "db", diesel(table_name = crate::schema::users))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub struct User {
     /// The ID for the user.
@@ -62,8 +62,8 @@ pub struct Recipe {
 
 /// An ingredient that a user has in their inventory
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
 #[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::users_inventory))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub(crate) struct UserInventoryIngredientRow {
@@ -79,6 +79,10 @@ pub(crate) struct UserInventoryIngredientRow {
     /// The "unit", i.e. what measurement unit the ingredient has.
     pub unit: String,
 
+    /// Expiration date of the ingredient
+    #[serde(default)]
+    pub expiration_date: Option<String>,
+
     /// What category of thing this belongs to.
     #[serde(default)]
     pub category_id: IngredientCategory,
@@ -86,8 +90,8 @@ pub(crate) struct UserInventoryIngredientRow {
 
 /// An ingredient that a user has in their inventory
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
 #[cfg_attr(feature = "api", derive(ToSchema))]
+#[cfg_attr(feature = "db", derive(Queryable, Selectable, Insertable))]
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::shopping_list))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub(crate) struct UserShoppingListRow {
@@ -120,6 +124,10 @@ pub struct Ingredient {
     /// The "unit", i.e. what measurement unit the ingredient has.
     pub unit: String,
 
+    /// Expiration date of the ingredient
+    #[serde(default)]
+    pub expiration_date: Option<String>,
+
     /// What category of thing this belongs to.
     #[serde(default)]
     pub category_id: IngredientCategory,
@@ -131,6 +139,7 @@ impl From<UserInventoryIngredientRow> for Ingredient {
             name: value.name,
             quantity: value.quantity,
             unit: value.unit,
+            expiration_date: value.expiration_date,
             category_id: value.category_id,
         }
     }
@@ -142,6 +151,7 @@ impl From<UserShoppingListRow> for Ingredient {
             name: value.name,
             quantity: value.quantity,
             unit: value.unit,
+            expiration_date: None,
             category_id: value.category_id,
         }
     }

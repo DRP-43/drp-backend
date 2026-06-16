@@ -53,6 +53,8 @@ diesel::table! {
         quantity -> Float8,
         #[max_length = 8]
         unit -> Varchar,
+        #[max_length = 12]
+        expiration_date -> Nullable<Varchar>,
         #[max_length = 8]
         category_id -> Varchar,
     }
