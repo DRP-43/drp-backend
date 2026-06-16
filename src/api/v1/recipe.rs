@@ -133,10 +133,10 @@ async fn post_publish_recipe(
         put,
         path = "/{recipe_id}/edit/under_user/{user_id}",
         params(
-            ("user_id" = UserId, Path, description = "UUID of the recipe"),
+            ("recipe_id" = RecipeId, Path, description = "UUID of the recipe"),
             ("user_id" = UserId, Path, description = "UUID of the user")
         ),
-        request_body(content = RecipeEditable, content_type = "application/json"),
+        request_body(content = Recipe, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe published", body = ())
