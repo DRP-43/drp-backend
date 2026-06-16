@@ -145,17 +145,14 @@ async fn put_edit_recipe(
         return Err(Error::UserEditingUnownedRecipe(recipe_id));
     }
 
-    let recipe_id = state
-        .query_db(|conn| {
-            recipes::table
-                .select(max(recipes::id))
-                .get_result::<Option<RecipeId>>(conn)
-        })
-        .map(|x| x.unwrap_or(0))?;
-
     let (recipe_row, ingredients) = recipe_edit.to_row_and_ingredients(recipe_id, user.id);
 
-    state.query_db(|conn| update(recipes::table).set(&recipe_row).execute(conn))?;
+    state.query_db(|conn| {
+        update(recipes::table)
+            .filter(recipes::id.eq(recipe_id))
+            .set(&recipe_row)
+            .execute(conn)
+    })?;
 
     // TODO: Better process than deleting every ingredient -> adding them back?
     state.query_db(|conn| {
