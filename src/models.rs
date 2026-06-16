@@ -55,17 +55,31 @@ pub struct Recipe {
     /// The body of the recipe, i.e. the "instructions"
     #[serde(rename = "recipe_body")]
     pub body: String,
+
+    /// The rating of the recipe. A float between 1 and 5.
+    #[serde(rename = "avg_score")]
+    pub rating: f64,
+
+    /// The number of reviews the recipe has.
+    pub num_reviews: i64,
 }
 
 impl Recipe {
-    /// Takes a recipe row and ingredients, and returns a recipe.
-    pub(crate) fn from_row(row: RecipeRow, ingredients: Vec<RecipeIngredientRow>) -> Self {
+    /// Takes a recipe row, ingredients, average rating, and number of ratings, and returns a recipe.
+    pub(crate) fn from_row(
+        row: RecipeRow,
+        ingredients: Vec<RecipeIngredientRow>,
+        rating: f64,
+        num_reviews: i64,
+    ) -> Self {
         Self {
             id: row.id,
             name: row.name,
             ingredients: ingredients.into_iter().map(Ingredient::from).collect(),
             servings: row.servings,
             body: row.body,
+            rating,
+            num_reviews,
         }
     }
 
