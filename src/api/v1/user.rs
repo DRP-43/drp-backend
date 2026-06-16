@@ -311,7 +311,7 @@ async fn get_favorites(
     let favorited_recipes = state.query_db(|conn| {
         let rows = UserFavoritedRecipe::belonging_to(&user)
             .inner_join(recipes::table)
-            .select(RecipeRow::as_select())
+            .select(RecipeEditable::as_select())
             .load(conn)?;
 
         db::get_recipes_from_rows(conn, rows)
@@ -438,7 +438,7 @@ async fn get_queue(
     let queued_recipes = state.query_db(|conn| {
         let rows = UserQueuedRecipe::belonging_to(&user)
             .inner_join(recipes::table)
-            .select(RecipeRow::as_select())
+            .select(RecipeEditable::as_select())
             .load(conn)?;
 
         db::get_recipes_from_rows(conn, rows)

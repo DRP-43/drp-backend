@@ -27,6 +27,8 @@ diesel::table! {
         name -> Varchar,
         body -> Text,
         servings -> Int4,
+        is_public -> Bool,
+        owner_id -> Int8,
     }
 }
 
@@ -84,6 +86,7 @@ diesel::table! {
 diesel::joinable!(recipe_ingredients -> recipes (recipe_id));
 diesel::joinable!(recipe_reviews -> recipes (recipe_id));
 diesel::joinable!(recipe_reviews -> users (user_id));
+diesel::joinable!(recipes -> users (owner_id));
 diesel::joinable!(shopping_list -> users (user_id));
 diesel::joinable!(users_favorite_recipes -> recipes (recipe_id));
 diesel::joinable!(users_favorite_recipes -> users (user_id));
