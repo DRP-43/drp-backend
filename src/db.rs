@@ -42,17 +42,14 @@ pub fn get_many_recipes_stats(
 pub fn get_recipe_from_id(conn: &mut PgConnection, id: RecipeId) -> QueryResult<Recipe> {
     let row = recipes::table
         .filter(recipes::id.eq(id))
-        .select(RecipeEditable::as_select())
-        .first::<RecipeEditable>(conn)?;
+        .select(RecipeRow::as_select())
+        .first::<RecipeRow>(conn)?;
 
     get_recipe_from_row(conn, row)
 }
 
 /// Gets a recipe from a [`RecipeRow`] object.
-pub(crate) fn get_recipe_from_row(
-    conn: &mut PgConnection,
-    row: RecipeEditable,
-) -> QueryResult<Recipe> {
+pub(crate) fn get_recipe_from_row(conn: &mut PgConnection, row: RecipeRow) -> QueryResult<Recipe> {
     let ingredients = RecipeIngredientRow::belonging_to(&row).load::<RecipeIngredientRow>(conn)?;
     let (rating, num_reviews) = get_recipe_stats(conn, row.id)?;
 
@@ -63,7 +60,7 @@ pub(crate) fn get_recipe_from_row(
 /// recipes are returned, i.e. the order of the `RecipeRow`s will be the order of the `Recipe`s.
 pub(crate) fn get_recipes_from_rows(
     conn: &mut PgConnection,
-    rows: Vec<RecipeEditable>,
+    rows: Vec<RecipeRow>,
 ) -> QueryResult<Vec<Recipe>> {
     let ingredients = RecipeIngredientRow::belonging_to(&rows)
         .select(RecipeIngredientRow::as_select())

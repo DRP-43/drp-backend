@@ -13,6 +13,7 @@ use utoipa_axum::router::OpenApiRouter;
      nest(
          (path = "/v1/user", api = user::UserApiDoc),
          (path = "/v1/recipe", api = recipe::RecipeApiDoc),
+         (path = "/v1/quotes", api = quotes::QuotesApiDoc),
      )
 )]
 pub struct V1ApiDoc;

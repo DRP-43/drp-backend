@@ -65,7 +65,7 @@ async fn get_recipe(Extension(recipe): Extension<Recipe>) -> Json<Recipe> {
 #[utoipa::path(
         post,
         path = "/",
-        request_body(content = Recipe, content_type = "application/json"),
+        request_body(content = RecipeEdit, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe ID of the recipe published", body = RecipeId)
@@ -79,10 +79,9 @@ async fn get_recipe(Extension(recipe): Extension<Recipe>) -> Json<Recipe> {
 async fn post_publish_recipe(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
-    Json(mut recipe): Json<Recipe>,
+    Json(recipe): Json<RecipeEdit>,
 ) -> Result<Json<RecipeId>> {
-    recipe.owner_id = user.id;
-    recipe.id = state
+    let recipe_id = state
         .query_db(|conn| {
             recipes::table
                 .select(max(recipes::id))
@@ -90,7 +89,7 @@ async fn post_publish_recipe(
         })
         .map(|x| x.map(|x| x + 1).unwrap_or(0))?;
 
-    let (recipe_row, ingredients) = recipe.to_row_and_ingredients();
+    let (recipe_row, ingredients) = recipe.to_row_and_ingredients(recipe_id, user.id);
 
     state.query_db(|conn| (&recipe_row).insert_into(recipes::table).execute(conn))?;
     state.query_db(|conn| {
@@ -112,7 +111,7 @@ async fn post_publish_recipe(
         params(
             ("recipe_id" = RecipeId, Path, description = "UUID of the recipe")
         ),
-        request_body(content = Recipe, content_type = "application/json"),
+        request_body(content = RecipeEdit, content_type = "application/json"),
         responses(
             (status = UNAUTHORIZED, description = "Failed to authorize user", body = String),
             (status = OK, description = "Recipe ID of the recipe edited", body = RecipeId)
@@ -127,7 +126,7 @@ async fn put_edit_recipe(
     Path(recipe_id): Path<RecipeId>,
     State(state): State<AppState>,
     Extension(user): Extension<User>,
-    Json(mut recipe): Json<Recipe>,
+    Json(recipe_edit): Json<RecipeEdit>,
 ) -> Result<Json<RecipeId>> {
     if state.query_db(|conn| {
         recipes::table
@@ -146,8 +145,7 @@ async fn put_edit_recipe(
         return Err(Error::UserEditingUnownedRecipe(recipe_id));
     }
 
-    recipe.owner_id = user.id;
-    recipe.id = state
+    let recipe_id = state
         .query_db(|conn| {
             recipes::table
                 .select(max(recipes::id))
@@ -155,7 +153,7 @@ async fn put_edit_recipe(
         })
         .map(|x| x.unwrap_or(0))?;
 
-    let (recipe_row, ingredients) = recipe.to_row_and_ingredients();
+    let (recipe_row, ingredients) = recipe_edit.to_row_and_ingredients(recipe_id, user.id);
 
     state.query_db(|conn| update(recipes::table).set(&recipe_row).execute(conn))?;
 

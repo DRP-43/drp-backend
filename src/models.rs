@@ -75,7 +75,7 @@ pub struct Recipe {
 impl Recipe {
     /// Takes a recipe row, ingredients, average rating, and number of ratings, and returns a recipe.
     pub(crate) fn from_row(
-        row: RecipeEditable,
+        row: RecipeRow,
         ingredients: Vec<RecipeIngredientRow>,
         rating: f64,
         num_reviews: i64,
@@ -94,9 +94,9 @@ impl Recipe {
     }
 
     /// Splits into a recipe row and ingredients.
-    pub(crate) fn to_row_and_ingredients(self) -> (RecipeEditable, Vec<RecipeIngredientRow>) {
+    pub(crate) fn to_row_and_ingredients(self) -> (RecipeRow, Vec<RecipeIngredientRow>) {
         (
-            RecipeEditable {
+            RecipeRow {
                 id: self.id,
                 name: self.name,
                 servings: self.servings,
@@ -108,6 +108,59 @@ impl Recipe {
                 .into_iter()
                 .map(|ingredient| RecipeIngredientRow {
                     recipe_id: self.id,
+                    name: ingredient.name,
+                    quantity: ingredient.quantity,
+                    unit: ingredient.unit,
+                    category_id: ingredient.category_id,
+                })
+                .collect(),
+        )
+    }
+}
+
+/// An edit to a recipe.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "api", derive(ToSchema))]
+pub struct RecipeEdit {
+    /// The name of the recipe.
+    pub name: String,
+
+    /// The ingredients in the recipe.
+    pub ingredients: Vec<Ingredient>,
+
+    /// The number of servings in the recipe.
+    pub servings: i32,
+
+    /// The body of the recipe, i.e. the "instructions"
+    #[serde(rename = "recipe_body")]
+    pub body: String,
+
+    /// Whether or not the recipe is publicly visible (if not, only visible to the
+    /// `private_owner_id` user)
+    pub is_public: bool,
+}
+
+impl RecipeEdit {
+    /// Splits into a recipe row and ingredients, taking in a `RecipeId` which the recipe falls
+    /// under, and a `UserId` which should own the recipe.
+    pub(crate) fn to_row_and_ingredients(
+        self,
+        recipe_id: RecipeId,
+        user_id: UserId,
+    ) -> (RecipeRow, Vec<RecipeIngredientRow>) {
+        (
+            RecipeRow {
+                id: recipe_id,
+                name: self.name,
+                servings: self.servings,
+                body: self.body,
+                is_public: self.is_public,
+                owner_id: user_id,
+            },
+            self.ingredients
+                .into_iter()
+                .map(|ingredient| RecipeIngredientRow {
+                    recipe_id,
                     name: ingredient.name,
                     quantity: ingredient.quantity,
                     unit: ingredient.unit,
@@ -135,8 +188,7 @@ impl Recipe {
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::recipes))]
 #[cfg_attr(feature = "db", diesel(belongs_to(User, foreign_key = owner_id)))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
-#[doc(alias = "RecipeRow")]
-pub struct RecipeEditable {
+pub(crate) struct RecipeRow {
     /// The ID for the recipe.
     pub id: RecipeId,
 
@@ -166,7 +218,7 @@ pub struct RecipeEditable {
     derive(Queryable, Selectable, Insertable, Identifiable, Associations)
 )]
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::recipe_ingredients))]
-#[cfg_attr(feature = "db", diesel(belongs_to(RecipeEditable, foreign_key = recipe_id)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(RecipeRow, foreign_key = recipe_id)))]
 #[cfg_attr(feature = "db", diesel(primary_key(recipe_id, name)))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 pub(crate) struct RecipeIngredientRow {
@@ -367,7 +419,7 @@ pub struct PriceQuote {
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::users_favorite_recipes))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 #[cfg_attr(feature = "db", diesel(belongs_to(User)))]
-#[cfg_attr(feature = "db", diesel(belongs_to(RecipeEditable, foreign_key = recipe_id)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(RecipeRow, foreign_key = recipe_id)))]
 #[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct UserFavoritedRecipe {
     /// The ID for the user.
@@ -383,10 +435,10 @@ pub struct UserFavoritedRecipe {
     feature = "db",
     derive(Queryable, Selectable, Identifiable, Insertable, Associations)
 )]
-#[cfg_attr(feature="db", diesel(table_name = crate::schema::users_queued_recipes))]
+#[cfg_attr(feature = "db", diesel(table_name = crate::schema::users_queued_recipes))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 #[cfg_attr(feature = "db", diesel(belongs_to(User)))]
-#[cfg_attr(feature = "db", diesel(belongs_to(RecipeEditable, foreign_key = recipe_id)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(RecipeRow, foreign_key = recipe_id)))]
 #[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct UserQueuedRecipe {
     /// The ID for the user.
@@ -408,7 +460,7 @@ pub struct UserQueuedRecipe {
 #[cfg_attr(feature = "db", diesel(table_name = crate::schema::recipe_reviews))]
 #[cfg_attr(feature = "db", diesel(check_for_backend(diesel::pg::Pg)))]
 #[cfg_attr(feature = "db", diesel(belongs_to(User)))]
-#[cfg_attr(feature = "db", diesel(belongs_to(RecipeEditable, foreign_key = recipe_id)))]
+#[cfg_attr(feature = "db", diesel(belongs_to(RecipeRow, foreign_key = recipe_id)))]
 #[cfg_attr(feature = "db", diesel(primary_key(user_id, recipe_id)))]
 pub struct RecipeReview {
     /// The ID for the user.
